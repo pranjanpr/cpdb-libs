@@ -1,4 +1,4 @@
-CPD_FRONT_FLAGS=$(shell pkg-config --cflags --libs CPDFrontend)
+CPD_FRONT_FLAGS=$(shell pkg-config --cflags --libs cpdb-libs-frontend)
 GLIB_FLAGS=$(shell pkg-config --cflags --libs gio-2.0 gio-unix-2.0 glib-2.0)
 
 .PHONY = all 

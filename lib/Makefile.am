@@ -1,24 +1,24 @@
 EXTRA_DIST = interface
-lib_LTLIBRARIES	= libCPDBackend.la libCPDFrontend.la
-libCPDBackend_la_SOURCES = backend_interface.c frontend_interface.c common_helper.c
-libCPDBackend_la_CPPFLAGS  = $(GLIB_CFLAGS)
-libCPDBackend_la_CPPFLAGS += $(GIO_CFLAGS)
-libCPDBackend_la_CPPFLAGS += $(GIOUNIX_CFLAGS)
+lib_LTLIBRARIES	= libcpdb-libs-backend.la libcpdb-libs-frontend.la
+libcpdb_libs_backend_la_SOURCES = backend_interface.c frontend_interface.c common_helper.c
+libcpdb_libs_backend_la_CPPFLAGS  = $(GLIB_CFLAGS)
+libcpdb_libs_backend_la_CPPFLAGS += $(GIO_CFLAGS)
+libcpdb_libs_backend_la_CPPFLAGS += $(GIOUNIX_CFLAGS)
 
-libCPDBackend_la_LIBADD  = $(GLIB_LIBS)
-libCPDBackend_la_LIBADD += $(GIO_LIBS)
-libCPDBackend_la_LIBADD += $(GIOUNIX_LIBS)
+libcpdb_libs_backend_la_LIBADD  = $(GLIB_LIBS)
+libcpdb_libs_backend_la_LIBADD += $(GIO_LIBS)
+libcpdb_libs_backend_la_LIBADD += $(GIOUNIX_LIBS)
 
-libCPDFrontend_la_SOURCES = backend_interface.c frontend_interface.c \
-                            common_helper.c frontend_helper.c
-libCPDFrontend_la_CPPFLAGS  = $(GLIB_CFLAGS)
-libCPDFrontend_la_CPPFLAGS += $(GIO_CFLAGS)
-libCPDFrontend_la_CPPFLAGS += $(GIOUNIX_CFLAGS)
+libcpdb_libs_frontend_la_SOURCES = backend_interface.c frontend_interface.c \
+                                    common_helper.c frontend_helper.c
+libcpdb_libs_frontend_la_CPPFLAGS  = $(GLIB_CFLAGS)
+libcpdb_libs_frontend_la_CPPFLAGS += $(GIO_CFLAGS)
+libcpdb_libs_frontend_la_CPPFLAGS += $(GIOUNIX_CFLAGS)
 
-libCPDFrontend_la_LIBADD  = -lcups -lpthread -lm -lcrypt
-libCPDFrontend_la_LIBADD += $(GLIB_LIBS)
-libCPDFrontend_la_LIBADD += $(GIO_LIBS)
-libCPDFrontend_la_LIBADD += $(GIOUNIX_LIBS)
+libcpdb_libs_frontend_la_LIBADD  = -lcups -lpthread -lm -lcrypt
+libcpdb_libs_frontend_la_LIBADD += $(GLIB_LIBS)
+libcpdb_libs_frontend_la_LIBADD += $(GIO_LIBS)
+libcpdb_libs_frontend_la_LIBADD += $(GIOUNIX_LIBS)
 
 ##INSTALL HEADERS
 cpd_interface_headersdir = $(includedir)/cpd-interface-headers
@@ -27,7 +27,7 @@ cpd_interface_headers_HEADERS = backend_interface.h \
                                 common_helper.h \
                                 frontend_helper.h 
 
-include_HEADERS = CPDBackend.h CPDFrontend.h 
+include_HEADERS = cpdb-libs-backend.h cpdb-libs-frontend.h 
 
 backend_interface.c backend_interface.h: interface/org.openprinting.Backend.xml
 	$(AM_V_GEN)gdbus-codegen --generate-c-code backend_interface \

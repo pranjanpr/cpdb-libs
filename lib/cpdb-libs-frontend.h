@@ -1,5 +1,5 @@
-#ifndef _CPD_FRONT_H
-#define _CPD_FRONT_H
+#ifndef _CPDB_LIB_FRONT_H
+#define _CPDB_LIB_FRONT_H
 
 #include <cpd-interface-headers/backend_interface.h>
 #include <cpd-interface-headers/frontend_interface.h>

@@ -5,8 +5,8 @@ libdir=@libdir@
 
 Cflags: -I${includedir}
 Requires: gio-2.0 gio-unix-2.0 glib-2.0
-Libs: -L${libdir} -lCPDFrontend
+Libs: -L${libdir} -lcpdb-libs-backend
 
-Name: CPDFrontend
-Description: The Common Printing Frontend Helper library
+Name: cpdb-libs-backend
+Description: The Common Printing Dialog Library for backends
 Version: 1.0.0

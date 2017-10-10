@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script. 
  
 AC_PREREQ([2.69]) 
-AC_INIT([CPD-LIBRARY],[1.0],[nilanjanalodh@gmail.com]) 
+AC_INIT([cpdb-libs],[1.0.0],[nilanjanalodh@gmail.com],[CPDB libraries for backends and frontends], [https://github.com/OpenPrinting/cpdb-libs]) 
 AM_INIT_AUTOMAKE([-Wall foreign]) 
 AC_CONFIG_SRCDIR([lib/frontend_helper.h]) 
 
@@ -32,7 +32,7 @@ AC_CHECK_FUNCS([getcwd])
 
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
-                 CPDBackend.pc
-                 CPDFrontend.pc])
+                 cpdb-libs-backend.pc
+                 cpdb-libs-frontend.pc])
 
 AC_OUTPUT
