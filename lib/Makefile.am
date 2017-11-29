@@ -1,16 +1,16 @@
 EXTRA_DIST = interface
-lib_LTLIBRARIES	= libcpdb-libs-backend.la libcpdb-libs-frontend.la
-libcpdb_libs_backend_la_SOURCES = backend_interface.c frontend_interface.c common_helper.c
-libcpdb_libs_backend_la_CPPFLAGS  = $(GLIB_CFLAGS)
-libcpdb_libs_backend_la_CPPFLAGS += $(GIO_CFLAGS)
-libcpdb_libs_backend_la_CPPFLAGS += $(GIOUNIX_CFLAGS)
+lib_LTLIBRARIES	= libcpdb-libs-frontend.la libcpdb-libs-common.la
 
-libcpdb_libs_backend_la_LIBADD  = $(GLIB_LIBS)
-libcpdb_libs_backend_la_LIBADD += $(GIO_LIBS)
-libcpdb_libs_backend_la_LIBADD += $(GIOUNIX_LIBS)
+libcpdb_libs_common_la_SOURCES = backend_interface.c frontend_interface.c common_helper.c
+libcpdb_libs_common_la_CPPFLAGS  = $(GLIB_CFLAGS)
+libcpdb_libs_common_la_CPPFLAGS += $(GIO_CFLAGS)
+libcpdb_libs_common_la_CPPFLAGS += $(GIOUNIX_CFLAGS)
 
-libcpdb_libs_frontend_la_SOURCES = backend_interface.c frontend_interface.c \
-                                    common_helper.c frontend_helper.c
+libcpdb_libs_common_la_LIBADD  = $(GLIB_LIBS)
+libcpdb_libs_common_la_LIBADD += $(GIO_LIBS)
+libcpdb_libs_common_la_LIBADD += $(GIOUNIX_LIBS)
+
+libcpdb_libs_frontend_la_SOURCES = frontend_helper.c
 libcpdb_libs_frontend_la_CPPFLAGS  = $(GLIB_CFLAGS)
 libcpdb_libs_frontend_la_CPPFLAGS += $(GIO_CFLAGS)
 libcpdb_libs_frontend_la_CPPFLAGS += $(GIOUNIX_CFLAGS)
@@ -42,4 +42,4 @@ frontend_interface.c frontend_interface.h: interface/org.openprinting.Frontend.x
 genfiles = *_interface.*
 
 clean-local:
-	rm -f $(genfiles) 
+	rm -f $(genfiles)

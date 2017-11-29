@@ -33,6 +33,7 @@ AC_CHECK_FUNCS([getcwd])
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
                  cpdb-libs-backend.pc
-                 cpdb-libs-frontend.pc])
+                 cpdb-libs-frontend.pc
+                 cpdb-libs-common.pc])
 
 AC_OUTPUT
