@@ -1,4 +1,7 @@
 EXTRA_DIST = interface
+
+BUILT_SOURCES = backend_interface.h frontend_interface.h
+
 lib_LTLIBRARIES	= libcpdb-libs-frontend.la libcpdb-libs-common.la
 
 libcpdb_libs_common_la_SOURCES = backend_interface.c frontend_interface.c common_helper.c
