@@ -1,12 +1,13 @@
-# Frontend and Backend Libraries for Common Print Dialog
+# Frontend/Backend Communication Libraries for the Common Print Dialog Backends
 
-This repository hosts the code for frontend and backend libraries for the common printing dialog (CPD) project. These libraries allow the CPD frontend and backends to communicate with each other over the D-Bus.
-The Frontend library also provides some extra functionality to deal with Printers, Settings, etc. in a high level manner.
+This repository hosts the code for frontend and backend libraries for the Common Printing Dialog Backends (CPDB) project. These libraries allow the CPDB frontends (the print dialogs) and backends (the modules communicating with the different .printing systems) too communicate with each other via D-Bus.
+The frontend library also provides some extra functionality to deal with Printers, Settings, etc. in a high level manner.
 
 ## Background
 
-The [Common Printing Dialog](https://wiki.ubuntu.com/CommonPrintingDialog) project aims to provide a uniform, GUI toolkit independent printing experience on Linux Desktop Environments.
+The Common Printing Dialog Backends (CPDB) project of OpenPrinting is about separating the print dialogs of different GUI toolkits and applications (GTK, Qt, LibreOffice, ...) from the different print technologies (CUPS/IPP, Google Cloud Print, ...) so that they can get developed independently and so always from all applications one can print with all print technologies and changes in the print technologies get supported quickly.
 
+If one opens the print dialog, the dialog will not talk directly to CUPS, Google Cloud Print, or any other printing system. For this communication there are the backends. The dialog will find all available backend and sends commands to them, for listing all available printers, giving property/option lists for the selected printers, and printing on the selcted printer. This communication is done via D-Bus. So the backends are easily exchangeable and for getting support for a new print technology only its backend needs to get added.
 
 ## Dependencies
 
