@@ -275,33 +275,59 @@ char *get_default_printer(FrontendObj *f, char *backend_name)
 
 int get_all_jobs(FrontendObj *f, Job **j, gboolean active_only)
 {
-    GHashTableIter iter;
-    gpointer key, value;
-
+    
+	/**inititalizing the arrays required for each of the backends **/
+	
+    /** num_jobs[] stores the number of jobs for each of the backends**/
     int *num_jobs = g_new(int, f->num_backends);
-    GVariant **var = g_new(GVariant *, f->num_backends);
+    
+    /**backend_names[] stores the name for each of the backends**/
+    char **backend_names = g_new0(char *, f->num_backends);
+    
+    /**retval[] stores the gvariant returned by the respective backend **/
+    GVariant **retval = g_new(GVariant *, f->num_backends);
+    
+    GHashTableIter iter;
     g_hash_table_iter_init(&iter, f->backend);
-
     int i = 0;
     int total_jobs = 0;
-    char **backend_names = g_new0(char *, f->num_backends);
+    
+    gpointer key, value;
+ 
+    /** Iterating over all the backends and getting each's active jobs**/
     while (g_hash_table_iter_next(&iter, &key, &value))
     {
-        /** Polling all the backends for their active jobs**/
+        
         PrintBackend *proxy = (PrintBackend *)value;
-
-        /**to do: change this to asynchronous call for better performance */
-        print_backend_call_get_all_jobs_sync(proxy, active_only, &(num_jobs[i]), &(var[i]), NULL, NULL);
+        
         backend_names[i] = (char *)key;
+        printf("Trying to get jobs for backend %s\n", backend_names[i]);
+        
+        GError *error = NULL;
+        print_backend_call_get_all_jobs_sync(proxy, active_only, &(num_jobs[i]), &(retval[i]), NULL, &error);
+        
+        if(error)
+        {
+        	printf("get_all_jobs failed\n");
+        	num_jobs[i] = 0;
+        	
+        }
+        else
+        {
+        	printf("Call succeeded\n");
+        }
+        
         total_jobs += num_jobs[i];
         i++; /** off to the next backend **/
     }
+    
     Job *jobs = g_new(Job, total_jobs);
     int n = 0;
 
     for (i = 0; i < f->num_backends; i++)
     {
-        unpack_job_array(var[i], num_jobs[i], jobs + n, backend_names[i]);
+    	if(num_jobs[i])
+    		unpack_job_array(retval[i], num_jobs[i], jobs + n, backend_names[i]);
         n += num_jobs[i];
     }
 

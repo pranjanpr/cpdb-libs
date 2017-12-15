@@ -158,7 +158,7 @@ PrinterObj *find_PrinterObj(FrontendObj *, char *printer_id, char *backend_name)
 char *get_default_printer(FrontendObj *, char *backend_name);
 
 /**
- * Get the list of (all/active) jobs
+ * Get the list of (all/active) jobs from all the backends
  * 
  * @param j : pointer to a Job array; the retrieved Job list array is stored at this location
  * @param active_only : when set to true , retrieves only the active jobs; 
