@@ -75,16 +75,26 @@ char *get_absolute_path(const char *file_path)
     {
         struct passwd *passwdEnt = getpwuid(getuid());
         char *home = passwdEnt->pw_dir;
-        char fp[1024], suffix[512];
-        strcpy(suffix, file_path + 2);
-        sprintf(fp, "%s/%s", home, suffix);
-        return get_string_copy(fp);
+	if (home == NULL)
+	  return NULL;
+	if (file_path[1] != '/' && file_path[1] != '\0')
+	  return NULL;
+	char *fp = malloc(sizeof(char) * (strlen(home) + strlen(file_path)));
+	if (fp == NULL)
+	  return NULL;
+        sprintf(fp, "%s%s", home, file_path + 1);
+        return fp;
     }
-    char fp[1024], cwd[512];
-    getcwd(cwd, sizeof(cwd));
+    char *cwd = getcwd(NULL, 0);
+    if (cwd == NULL)
+      return NULL;
+    char *fp = malloc(sizeof(char) * (strlen(cwd) + strlen(file_path) + 2));
+    if (fp == NULL)
+      return NULL;
     sprintf(fp, "%s/%s", cwd, file_path);
+    free(cwd);
     printf("%s\n", fp);
-    return get_string_copy(fp);
+    return fp;
 }
 char *extract_file_name(const char *file_path)
 {

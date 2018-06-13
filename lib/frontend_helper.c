@@ -90,12 +90,12 @@ FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb, eve
     f->skeleton = print_frontend_skeleton_new();
     f->connection = NULL;
     if (!instance_name)
-        f->bus_name = DIALOG_BUS_NAME;
+      f->bus_name = get_string_copy(DIALOG_BUS_NAME);
     else
     {
-        char tmp[300];
+	char *tmp = malloc(sizeof(char) * (strlen(DIALOG_BUS_NAME) + strlen(instance_name) + 1));
         sprintf(tmp, "%s%s", DIALOG_BUS_NAME, instance_name);
-        f->bus_name = get_string_copy(tmp);
+        f->bus_name = tmp;
     }
     f->add_cb = add_cb;
     f->rem_cb = rem_cb;
@@ -143,9 +143,10 @@ void activate_backends(FrontendObj *f)
             {
                 backend_suffix = get_string_copy((dir->d_name) + len);
 
-                char msg[100];
-                sprintf(msg, "Found backend %s", backend_suffix);
+		char *msg = malloc(sizeof(char) * (strlen(backend_suffix) + 20));
+		sprintf(msg, "Found backend %s", backend_suffix);
                 DBG_LOG(msg, INFO);
+		free(msg);
 
                 proxy = create_backend_from_file(dir->d_name);
 
@@ -165,22 +166,24 @@ PrintBackend *create_backend_from_file(const char *backend_file_name)
     PrintBackend *proxy;
     char *backend_name = get_string_copy(backend_file_name);
 
-    char path[1024];
+    char *path = malloc(sizeof(char) * (strlen(DBUS_DIR) + strlen(backend_file_name) + 2));
     sprintf(path, "%s/%s", DBUS_DIR, backend_file_name);
 
     FILE *file = fopen(path, "r");
     char obj_path[200];
     fscanf(file, "%s", obj_path);
     fclose(file);
+    free(path);
     GError *error = NULL;
     proxy = print_backend_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION, 0,
                                                  backend_name, obj_path, NULL, &error);
 
     if (error)
     {
-        char msg[512];
+        char *msg = malloc(sizeof(char) * (strlen(backend_name) + 40));
         sprintf(msg, "Error creating backend proxy for %s", backend_name);
         DBG_LOG(msg, ERR);
+	free(msg);
     }
     return proxy;
 }
@@ -199,9 +202,10 @@ gboolean add_printer(FrontendObj *f, PrinterObj *p)
 
     if (p->backend_proxy == NULL)
     {
-        char msg[512];
+        char *msg = malloc(sizeof(char) * (strlen(p->backend_name) + 60));
         sprintf(msg, "Can't add printer. Backend %s doesn't exist", p->backend_name);
         DBG_LOG(msg, ERR);
+	free(msg);
     }
 
     g_hash_table_insert(f->printer, concat(p->id, p->backend_name), p);
@@ -249,7 +253,7 @@ void unhide_temporary_cups_printers(FrontendObj *f)
 
 PrinterObj *find_PrinterObj(FrontendObj *f, char *printer_id, char *backend_name)
 {
-    char hashtable_key[512];
+    char *hashtable_key = malloc(sizeof(char) * (strlen(printer_id) + strlen(backend_name) + 2));
     sprintf(hashtable_key, "%s#%s", printer_id, backend_name);
 
     PrinterObj *p = g_hash_table_lookup(f->printer, hashtable_key);
@@ -257,6 +261,7 @@ PrinterObj *find_PrinterObj(FrontendObj *f, char *printer_id, char *backend_name
     {
         DBG_LOG("Printer doesn't exist.\n", ERR);
     }
+    free(hashtable_key);
     return p;
 }
 
@@ -542,9 +547,10 @@ PrinterObj *resurrect_printer_from_file(const char *filename)
 
     fgets(line, 1024, fp);
     p->backend_name = get_string_copy(strtok(line, "#"));
-    char backend_file_name[512];
+    char *backend_file_name = malloc(sizeof(char) * (strlen(BACKEND_PREFIX) + strlen(p->backend_name) + 1));
     sprintf(backend_file_name, "%s%s", BACKEND_PREFIX, p->backend_name);
     p->backend_proxy = create_backend_from_file(backend_file_name);
+    free(backend_file_name);
     print_backend_call_replace_sync(p->backend_proxy, previous_parent_dialog, NULL, NULL);
 
     fgets(line, 1024, fp);
@@ -788,9 +794,9 @@ void DBG_LOG(const char *msg, int msg_level)
 }
 char *concat(char *printer_id, char *backend_name)
 {
-    char str[512];
+    char *str = malloc(sizeof(char) * (strlen(printer_id) + strlen(backend_name) + 2));
     sprintf(str, "%s#%s", printer_id, backend_name);
-    return get_string_copy(str);
+    return str;
 }
 
 const char *pwg_to_readable(const char *pwg_media_name)
