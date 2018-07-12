@@ -22,6 +22,8 @@ If one opens the print dialog, the dialog will not talk directly to CUPS, Google
  - GLIB 2.0 :
 `sudo apt install libglib2.0-dev`
 
+ - LIBTOOL :
+`sudo apt install libtool`
  
 ## Build and installation
 
