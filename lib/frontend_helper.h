@@ -277,6 +277,7 @@ int get_active_jobs_count(PrinterObj *);
  * p->settings
  */
 char *print_file(PrinterObj *p, char *file_path);
+char *print_file_path(PrinterObj *p, char *file_path, char *final_file_path);
 
 /**
  * Wrapper for the add_setting(Settings* , ..) function.

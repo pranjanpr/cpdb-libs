@@ -195,6 +195,17 @@ gpointer parse_commands(gpointer user_data)
             add_setting_to_printer(p, "copies", "3");
             print_file(p, file_path);
         }
+        else if (strcmp(buf, "print-file-path") == 0)
+        {
+            char printer_id[100], file_path[200], final_file_path[200];
+            scanf("%s%s%s", file_path, printer_id, final_file_path);
+            /**
+             * Try adding some settings here .. change them and experiment
+             */
+            PrinterObj *p = find_PrinterObj(f, printer_id, "FILE");
+            add_setting_to_printer(p, "copies", "3");
+            print_file_path(p, file_path, final_file_path);
+        }
         else if (strcmp(buf, "get-active-jobs-count") == 0)
         {
             char printer_id[100];
@@ -252,6 +263,7 @@ void display_help()
     //printf("%s\n", "ping <printer id> ");
     printf("%s\n", "get-default-printer <backend name>");
     printf("print-file <file path> <printer_id> <backend_name>\n");
+    printf("print-file-path <file path> <printer_id> <final_file_path>\n");
     printf("get-active-jobs-count <printer-name> <backend-name>\n");
     printf("get-all-jobs <0 for all jobs; 1 for only active>\n");
     printf("%s\n", "get-state <printer id> <backend name>");
