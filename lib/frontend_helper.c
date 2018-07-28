@@ -484,24 +484,22 @@ char *print_file(PrinterObj *p, char *file_path)
 }
 char *print_file_path(PrinterObj *p, char *file_path, char *final_file_path)
 {
-    puts("Inside File Path");
-    char *jobid;
+    char *result;
     char *absolute_file_path = get_absolute_path(file_path);
     char *absolute_final_file_path = get_absolute_path(final_file_path);
     print_backend_call_print_file_sync(p->backend_proxy, p->id, absolute_file_path,
                                        p->settings->count,
                                        serialize_to_gvariant(p->settings),
                                        absolute_final_file_path,
-                                       &jobid, NULL, NULL);
+                                       &result, NULL, NULL);
     free(absolute_file_path);
     free(absolute_final_file_path);
-    if (jobid && jobid[0] != '0')
+    if (result)
         DBG_LOG("File printed successfully.\n", INFO);
     else
         DBG_LOG("Error printing file.\n", ERR);
 
-    save_to_disk(p->settings);
-    return jobid;
+    return result;
 }
 void add_setting_to_printer(PrinterObj *p, char *name, char *val)
 {
