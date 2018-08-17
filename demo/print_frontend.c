@@ -11,7 +11,7 @@ FrontendObj *f;
 
 static int add_printer_callback(PrinterObj *p)
 {
-    // printf("print_frontend.c : Printer %s added!\n", p->name);
+    //printf("print_frontend.c : Printer %s added!\n", p->name);
     print_basic_options(p);
 }
 
@@ -87,6 +87,10 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s%s", printer_id, backend_name);
             g_message("Getting all attributes ..\n");
             PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
+            
+            if(p == NULL)
+              continue;
+
             Options *opts = get_all_options(p);
 
             printf("Retrieved %d options.\n", opts->count);
@@ -192,6 +196,16 @@ gpointer parse_commands(gpointer user_data)
              * Try adding some settings here .. change them and experiment
              */
             PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
+
+            if(strcmp(backend_name, "FILE") == 0)
+            {
+              char final_file_path[200];
+              printf("Please give the final file path: ");
+              scanf("%s", final_file_path);
+              print_file_path(p, file_path, final_file_path);
+              continue;
+            }
+
             add_setting_to_printer(p, "copies", "3");
             print_file(p, file_path);
         }
