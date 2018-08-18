@@ -13,6 +13,8 @@ libcpdb_libs_common_la_LIBADD  = $(GLIB_LIBS)
 libcpdb_libs_common_la_LIBADD += $(GIO_LIBS)
 libcpdb_libs_common_la_LIBADD += $(GIOUNIX_LIBS)
 
+libcpdb_libs_common_la_LDFLAGS = -no-undefined -version-info 1
+
 libcpdb_libs_frontend_la_SOURCES = frontend_helper.c
 libcpdb_libs_frontend_la_CPPFLAGS  = $(GLIB_CFLAGS)
 libcpdb_libs_frontend_la_CPPFLAGS += $(GIO_CFLAGS)
@@ -22,6 +24,8 @@ libcpdb_libs_frontend_la_LIBADD  = -lcups -lpthread -lm -lcrypt
 libcpdb_libs_frontend_la_LIBADD += $(GLIB_LIBS)
 libcpdb_libs_frontend_la_LIBADD += $(GIO_LIBS)
 libcpdb_libs_frontend_la_LIBADD += $(GIOUNIX_LIBS)
+
+libcpdb_libs_frontend_la_LDFLAGS = -no-undefined -version-info 1
 
 ##INSTALL HEADERS
 cpd_interface_headersdir = $(includedir)/cpd-interface-headers
