@@ -87,7 +87,7 @@ gpointer parse_commands(gpointer user_data)
             scanf("%s%s", printer_id, backend_name);
             g_message("Getting all attributes ..\n");
             PrinterObj *p = find_PrinterObj(f, printer_id, backend_name);
-            
+
             if(p == NULL)
               continue;
 
