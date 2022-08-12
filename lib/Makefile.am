@@ -36,6 +36,11 @@ libcpdb_libs_frontend_la_LIBADD += $(GIOUNIX_LIBS)
 
 libcpdb_libs_frontend_la_LDFLAGS = -no-undefined -version-info 1
 
+cpd_interface_headersdir = $(includedir)/cpd-interface-headers
+cpd_interface_headers_HEADERS = backend_interface.h \
+                                frontend_interface.h \
+                                common_helper.h \
+                                frontend_helper.h
 include_HEADERS = cpdb-libs-backend.h \
 		  cpdb-libs-frontend.h
 
