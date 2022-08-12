@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script. 
  
 AC_PREREQ([2.69]) 
-AC_INIT([cpdb-libs],[1.2.0],[nilanjanalodh@gmail.com],[CPDB libraries for backends and frontends], [https://github.com/OpenPrinting/cpdb-libs])
+AC_INIT([cpdb-libs], [1.3.0], [https://github.com/OpenPrinting/cpdb-libs/issues], [cpdb-libs], [https://github.com/OpenPrinting/cpdb-libs])
 AM_INIT_AUTOMAKE([-Wall foreign]) 
 AC_CONFIG_SRCDIR([lib/frontend_helper.h]) 
 
