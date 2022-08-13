@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <cpdb-libs-frontend.h>
+#include <cpdb/frontend.h>
 
 int main(int argc, char **argv)
 {

@@ -1,18 +1,16 @@
+#ifndef _CPDB_FRONTEND_H_
+#define _CPDB_FRONTEND_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifndef _FRONTEND_HELPER_H_
-#define _FRONTEND_HELPER_H_
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <glib.h>
 #include <dirent.h>
-#include "common_helper.h"
-#include "backend_interface.h"
-#include "frontend_interface.h"
+#include <cpdb/cpdb.h>
 
 #define INFO 3
 #define WARN 2
@@ -499,8 +497,9 @@ char *concat(char *printer_id, char *backend_name);
  * and fill the Options structure approriately
  */
 void unpack_options(GVariant *var, int num_options, Options *options);
-#endif
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* !_CPDB_FRONTEND_H_ */

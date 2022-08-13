@@ -3,7 +3,7 @@
 #include <glib.h>
 #include <string.h>
 
-#include <cpdb-libs-frontend.h>
+#include <cpdb/frontend.h>
 
 void display_help();
 gpointer parse_commands(gpointer user_data);

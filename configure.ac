@@ -2,9 +2,9 @@
 # Process this file with autoconf to produce a configure script. 
  
 AC_PREREQ([2.69]) 
-AC_INIT([cpdb-libs], [1.3.0], [https://github.com/OpenPrinting/cpdb-libs/issues], [cpdb-libs], [https://github.com/OpenPrinting/cpdb-libs])
+AC_INIT([cpdb-libs], [2.0.0], [https://github.com/OpenPrinting/cpdb-libs/issues], [cpdb-libs], [https://github.com/OpenPrinting/cpdb-libs])
 AM_INIT_AUTOMAKE([-Wall foreign]) 
-AC_CONFIG_SRCDIR([lib/frontend_helper.h]) 
+AC_CONFIG_SRCDIR([cpdb/cpdb-frontend.h])
 
 : ${CFLAGS=""}
 
@@ -31,9 +31,9 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([getcwd])
 
 AC_CONFIG_FILES([Makefile
-                 lib/Makefile
-                 cpdb-libs-backend.pc
-                 cpdb-libs-frontend.pc
-                 cpdb-libs-common.pc])
+                 cpdb/Makefile
+                 cpdb-backend.pc
+                 cpdb-frontend.pc
+                 cpdb.pc])
 
 AC_OUTPUT

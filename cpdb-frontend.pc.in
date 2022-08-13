@@ -4,9 +4,9 @@ includedir=@includedir@
 libdir=@libdir@
 
 Cflags: -I${includedir}
-Requires: gio-2.0 gio-unix-2.0 glib-2.0 cpdb-libs-common
-Libs: -L${libdir} -lcpdb-libs-frontend
+Requires: gio-2.0 gio-unix-2.0 glib-2.0 cpdb
+Libs: -L${libdir} -lcpdb-frontend
 
-Name: cpdb-libs-frontend
+Name: cpdb-frontend
 Description: Common Print Dialog Backends: Library for frontends
 Version: @VERSION@

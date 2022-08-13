@@ -1,5 +1,9 @@
-#ifndef _COMMON_HELPER_H_
-#define _COMMON_HELPER_H_
+#ifndef _CPDB_H_
+#define _CPDB_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 #include <stdio.h>
@@ -9,8 +13,8 @@
 #include <glib.h>
 #include <sys/types.h>
 #include <pwd.h>
-#include "backend_interface.h"
-#include "frontend_interface.h"
+#include <cpdb/backend-interface.h>
+#include <cpdb/frontend-interface.h>
 
 #define PRINTER_ADDED_ARGS "(sssssbss)"
 #define JOB_ARGS "(ssssssi)"
@@ -87,4 +91,8 @@ char *extract_file_name(const char* file_path);
 #define JOB_STATE_STOPPED "Stopped"
 
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* !_CPDB_H_ */
