@@ -8,7 +8,7 @@ int main(int argc, char **argv)
         printf("Usage : %s filepath_to_print\n", argv[0]);
         exit(EXIT_SUCCESS);
     }
-    PrinterObj *p = resurrect_printer_from_file("/tmp/.printer-pickle");
+    cpdb_printer_obj_t *p = cpdbResurrectPrinterFromFile("/tmp/.printer-pickle");
     if (p == NULL)
     {
         printf("No serialized printer found. "
@@ -16,5 +16,5 @@ int main(int argc, char **argv)
                "'pickle-printer' command inside print_frontend\n");
         exit(EXIT_FAILURE);
     }
-    print_file(p, argv[1]);
+    cpdbPrintFile(p, argv[1]);
 }

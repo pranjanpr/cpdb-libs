@@ -12,27 +12,27 @@ extern "C" {
 #include <dirent.h>
 #include <cpdb/cpdb.h>
 
-#define INFO 3
-#define WARN 2
-#define ERR 1
+#define CPDB_DEBUG_LEVEL_INFO 3
+#define CPDB_DEBUG_LEVEL_WARN 2
+#define CPDB_DEBUG_LEVEL_ERR 1
 
-#define DEBUG_LEVEL INFO
+#define CPDB_DEBUG_LEVEL CPDB_DEBUG_LEVEL_INFO
 
-#define DIALOG_BUS_NAME "org.openprinting.PrintFrontend"
-#define DIALOG_OBJ_PATH "/"
-#define DBUS_DIR "/usr/share/print-backends"
-#define BACKEND_PREFIX "org.openprinting.Backend."
-#define SETTINGS_FILE "~/.CPD-print-settings"
+#define CPDB_DIALOG_BUS_NAME "org.openprinting.PrintFrontend"
+#define CPDB_DIALOG_OBJ_PATH "/"
+#define CPDB_DBUS_DIR "/usr/share/print-backends"
+#define CPDB_BACKEND_PREFIX "org.openprinting.Backend."
+#define CPDB_SETTINGS_FILE "~/.CPD-print-settings"
 
-typedef struct _FrontendObj FrontendObj;
-typedef struct _PrinterObj PrinterObj;
-typedef struct _AsyncObj AsyncObj;
-typedef struct _Settings Settings;
-typedef struct _Options Options;
-typedef struct _Option Option;
-typedef struct _Job Job;
+typedef struct cpdb_frontend_obj_s cpdb_frontend_obj_t;
+typedef struct cpdb_printer_obj_s cpdb_printer_obj_t;
+typedef struct cpdb_async_obj_s cpdb_async_obj_t;
+typedef struct cpdb_settings_s cpdb_settings_t;
+typedef struct cpdb_options_s cpdb_options_t;
+typedef struct cpdb_option_s cpdb_option_t;
+typedef struct cpdb_job_s cpdb_job_t;
 
-typedef int (*event_callback)(PrinterObj *);
+typedef int (*cpdb_event_callback)(cpdb_printer_obj_t *);
 
 /**
  * Callback for async functions
@@ -40,35 +40,35 @@ typedef int (*event_callback)(PrinterObj *);
  * @param int 		: success
  * @param void * 	: user_data
  */
-typedef void (*async_callback)(PrinterObj *, int, void *);
+typedef void (*cpdb_async_callback)(cpdb_printer_obj_t *, int, void *);
 
 /*********************definitions ***************************/
 
 /**
-______________________________________ FrontendObj __________________________________________
+______________________________________ cpdb_frontend_obj_t __________________________________________
 
 **/
 
-struct _FrontendObj
+struct cpdb_frontend_obj_s
 {
     PrintFrontend *skeleton;
     GDBusConnection *connection;
 
     char *bus_name;
-    event_callback add_cb;
-    event_callback rem_cb;
+    cpdb_event_callback add_cb;
+    cpdb_event_callback rem_cb;
 
     int num_backends;
     GHashTable *backend; /**[backend name(like "CUPS" or "GCP")] ---> [BackendObj]**/
 
     int num_printers;
-    GHashTable *printer; /**[printer name] --> [PrinterObj] **/
+    GHashTable *printer; /**[printer name] --> [cpdb_printer_obj_t] **/
 
-    Settings *last_saved_settings; /** The last saved settings to disk */
+    cpdb_settings_t *last_saved_settings; /** The last saved settings to disk */
 };
 
 /**
- * Get a new FrontendObj instance
+ * Get a new cpdb_frontend_obj_t instance
  * 
  * @params
  * 
@@ -79,80 +79,80 @@ struct _FrontendObj
  * rem_cb : The callback function to call when a printer is removed
  * 
  */
-FrontendObj *get_new_FrontendObj(char *instance_name, event_callback add_cb, event_callback remove_cb);
+cpdb_frontend_obj_t *cpdbGetNewFrontendObj(char *instance_name, cpdb_event_callback add_cb, cpdb_event_callback remove_cb);
 
 /**
  * Start the frontend D-Bus Service
  */
-void connect_to_dbus(FrontendObj *);
+void cpdbConnectToDBus(cpdb_frontend_obj_t *);
 
 /**
  * Notify Backend services before stopping Frontend
  */
-void disconnect_from_dbus(FrontendObj *);
+void cpdbDisconnectFromDBus(cpdb_frontend_obj_t *);
 
 /**
  * Discover the currently installed backends and activate them
  * 
  * 
- * Reads the DBUS_DIR folder to find the files installed by 
+ * Reads the CPDB_DBUS_DIR folder to find the files installed by 
  * the respective backends , 
  * For eg:  org.openprinting.Backend.XYZ
  * 
  * XYZ = Backend suffix, using which it will be identified henceforth 
  */
-void activate_backends(FrontendObj *);
+void cpdbActivateBackends(cpdb_frontend_obj_t *);
 
 /**
- * The default behaviour of FrontendObj is to use the
+ * The default behaviour of cpdb_frontend_obj_t is to use the
  * settings previously saved to disk the last time any print dialog ran.
  * 
  * To ignore the last saved settings, you need to explicitly call this function
- * after get_new_FrontendObj
+ * after cpdbGetNewFrontendObj
  */
-void ignore_last_saved_settings(FrontendObj *);
+void cpdbIgnoreLastSavedSettings(cpdb_frontend_obj_t *);
 
 /**
- * Add the printer to the FrontendObj instance
+ * Add the printer to the cpdb_frontend_obj_t instance
  */
-gboolean add_printer(FrontendObj *f, PrinterObj *p);
+gboolean cpdbAddPrinter(cpdb_frontend_obj_t *f, cpdb_printer_obj_t *p);
 
 /**
- * Remove the printer from FrontendObj
+ * Remove the printer from cpdb_frontend_obj_t
  * 
  * @returns
- * The PrinterObj* struct corresponding to the printer just removed,
+ * The cpdb_printer_obj_t* struct corresponding to the printer just removed,
  * or NULL if the removal was unsuccesful 
  * 
- * The PrinterObj removed is not deallocated. 
+ * The cpdb_printer_obj_t removed is not deallocated. 
  * The caller is responsible for deallocation
  */
-PrinterObj *remove_printer(FrontendObj *f, char *printer_id, char *backend_name);
-void refresh_printer_list(FrontendObj *f);
+cpdb_printer_obj_t *cpdbRemovePrinter(cpdb_frontend_obj_t *f, char *printer_id, char *backend_name);
+void cpdbRefreshPrinterList(cpdb_frontend_obj_t *f);
 
 /**
  * Hide the remote printers of the backend
  */
-void hide_remote_printers(FrontendObj *f);
-void unhide_remote_printers(FrontendObj *f);
+void cpdbHideRemotePrinters(cpdb_frontend_obj_t *f);
+void cpdbUnhideRemotePrinters(cpdb_frontend_obj_t *f);
 
 /**
  * Hide those (temporary) printers which have been discovered by the backend,
  * but haven't been yet set up locally
  */
-void hide_temporary_printers(FrontendObj *f);
-void unhide_temporary_printers(FrontendObj *f);
+void cpdbHideTemporaryPrinters(cpdb_frontend_obj_t *f);
+void cpdbUnhideTemporaryPrinters(cpdb_frontend_obj_t *f);
 
 /**
  * Read the file installed by the backend and create a proxy object 
  * using the backend service name and object path.
  */
-PrintBackend *create_backend_from_file(const char *);
+PrintBackend *cpdbCreateBackendFromFile(const char *);
 
 /**
- * Find the PrinterObj instance with a particular id ans backend name.
+ * Find the cpdb_printer_obj_t instance with a particular id ans backend name.
  */
-PrinterObj *find_PrinterObj(FrontendObj *, char *printer_id, char *backend_name);
+cpdb_printer_obj_t *cpdbFindPrinterObj(cpdb_frontend_obj_t *, char *printer_id, char *backend_name);
 
 /**
  * Get the default printer for a particular backend
@@ -162,28 +162,28 @@ PrinterObj *find_PrinterObj(FrontendObj *, char *printer_id, char *backend_name)
  *                          or
  *                          the complete name ("org.openprinting.Backend.CUPS")
  */
-char *get_default_printer(FrontendObj *, char *backend_name);
+char *cpdbGetDefaultPrinter(cpdb_frontend_obj_t *, char *backend_name);
 
 /**
  * Get the list of (all/active) jobs from all the backends
  * 
- * @param j : pointer to a Job array; the retrieved Job list array is stored at this location
+ * @param j : pointer to a cpdb_job_t array; the retrieved job list array is stored at this location
  * @param active_only : when set to true , retrieves only the active jobs; 
  *                      otherwise fetches all(active + completed + stopped) jobs
  *                      Retrieves jobs for all users.
  * 
- * returns : number of jobs(i.e. length of the Job array)
+ * returns : number of jobs(i.e. length of the cpdb_job_t array)
  * 
  */
-int get_all_jobs(FrontendObj *, Job **j, gboolean active_only);
+int cpdbGetAllJobs(cpdb_frontend_obj_t *, cpdb_job_t **j, gboolean active_only);
 
 /*******************************************************************************************/
 
 /**
-______________________________________ PrinterObj __________________________________________
+______________________________________ cpdb_printer_obj_t __________________________________________
 
 **/
-struct _PrinterObj
+struct cpdb_printer_obj_s
 {
     PrintBackend *backend_proxy; /** The proxy object of the backend the printer is associated with **/
     char *backend_name;          /** Backend name ,("CUPS"/ "GCP") also used as suffix */
@@ -196,31 +196,32 @@ struct _PrinterObj
     char *info;
     char *make_and_model;
     char *state;
-    gboolean is_accepting_jobs;
+    gboolean cpdbIsAcceptingJobs;
 
     /** The more advanced options we get from the backend **/
-    Options *options;
+    cpdb_options_t *options;
 
     /**The settings the user selects, and which will be used for printing the job**/
-    Settings *settings;
+    cpdb_settings_t *settings;
 };
-PrinterObj *get_new_PrinterObj();
+
+cpdb_printer_obj_t *cpdbGetNewPrinterObj();
 
 /**
- * Fill the basic options of PrinterObj from the GVariant returned with the printerAdded signal
+ * Fill the basic options of cpdb_printer_obj_t from the GVariant returned with the printerAdded signal
  */
-void fill_basic_options(PrinterObj *, GVariant *);
+void cpdbFillBasicOptions(cpdb_printer_obj_t *, GVariant *);
 
 /**
- * Print the basic options of PrinterObj
+ * Print the basic options of cpdb_printer_obj_t
  */
-void print_basic_options(PrinterObj *);
-gboolean is_accepting_jobs(PrinterObj *);
-char *get_state(PrinterObj *);
+void cpdbPrintBasicOptions(cpdb_printer_obj_t *);
+gboolean cpdbIsAcceptingJobs(cpdb_printer_obj_t *);
+char *cpdbGetState(cpdb_printer_obj_t *);
 
 /**
  * Get all the advanced supported options for the printer.
- * This function populates the 'options' variable of the PrinterObj structure, 
+ * This function populates the 'options' variable of the cpdb_printer_obj_t structure, 
  * and returns the same.
  * 
  * If the options haven't been fetched before, they are fetched from the backend. 
@@ -232,16 +233,16 @@ char *get_state(PrinterObj *);
  *  number of supported values, 
  *  array of supported values
  */
-Options *get_all_options(PrinterObj *);
+cpdb_options_t *cpdbGetAllOptions(cpdb_printer_obj_t *);
 
 /**
- * Get a single Option struct corresponding to a particular name.
+ * Get a single cpdb_option_t struct corresponding to a particular name.
  * 
  * @returns
- * Option* if the option was found
+ * Option if the option was found
  * NULL if the option with desired name doesn't exist 
  */
-Option *get_Option(PrinterObj *p, char *name);
+cpdb_option_t *cpdbGetOption(cpdb_printer_obj_t *p, char *name);
 
 /**
  * Get the default value corresponding to the option name
@@ -252,7 +253,7 @@ Option *get_Option(PrinterObj *p, char *name);
  * NULL if the option with the particular name doesn't exist.
  * 
  */
-char *get_default(PrinterObj *p, char *name);
+char *cpdbGetDefault(cpdb_printer_obj_t *p, char *name);
 
 /**
  * Get the value of the setting corresponding to the name
@@ -262,7 +263,7 @@ char *get_default(PrinterObj *p, char *name);
  * NULL if the setting with the particular name doesn't exist.
  * 
  */
-char *get_setting(PrinterObj *p, char *name);
+char *cpdbGetSetting(cpdb_printer_obj_t *p, char *name);
 
 /**
  * Get the 'current value' of the attribute with the particular name
@@ -271,38 +272,38 @@ char *get_setting(PrinterObj *p, char *name);
  * else the default value is returned;
  * i.e. , the settings override the defaults
  */
-char *get_current(PrinterObj *p, char *name);
+char *cpdbGetCurrent(cpdb_printer_obj_t *p, char *name);
 
 /**
  * Get number of active jobs(pending + paused + printing)
  * for the printer
  */
-int get_active_jobs_count(PrinterObj *);
+int cpdbGetActiveJobsCount(cpdb_printer_obj_t *);
 
 /**
  * Submits a single file for printing, using the settings stored in 
  * p->settings
  */
-char *print_file(PrinterObj *p, char *file_path);
-char *print_file_path(PrinterObj *p, char *file_path, char *final_file_path);
+char *cpdbPrintFile(cpdb_printer_obj_t *p, char *file_path);
+char *cpdbPrintFilePath(cpdb_printer_obj_t *p, char *file_path, char *final_file_path);
 
 /**
- * Wrapper for the add_setting(Settings* , ..) function.
+ * Wrapper for the cpdbAddSetting(cpdb_settings_t* , ..) function.
  * Adds the desired setting to p->settings.
  * Updates the value if the setting already exits.
  * 
  * @param name : name of the setting
  * @param val : value of the setting
  */
-void add_setting_to_printer(PrinterObj *p, char *name, char *val);
+void cpdbAddSettingToPrinter(cpdb_printer_obj_t *p, char *name, char *val);
 
 /**
- * Wrapper for the clear_setting(Settings* , ..) function.
+ * Wrapper for the cpdbClearSetting(cpdb_settings_t* , ..) function.
  * clear the desired setting from p->settings.
  * 
  * @param name : name of the setting
  */
-gboolean clear_setting_from_printer(PrinterObj *p, char *name);
+gboolean cpdbClearSettingFromPrinter(cpdb_printer_obj_t *p, char *name);
 
 /**
  * Cancel a job on the printer
@@ -311,33 +312,33 @@ gboolean clear_setting_from_printer(PrinterObj *p, char *name);
  * TRUE if job cancellation was successful
  * FALSE otherwise
  */
-gboolean cancel_job(PrinterObj *p, char *job_id);
+gboolean cpdbCancelJob(cpdb_printer_obj_t *p, char *job_id);
 
 /**
- * Serialize the PrinterObj and save it to a file
+ * Serialize the cpdb_printer_obj_t and save it to a file
  * This also keeps the respective backend of the printer alive.
  * 
- * This PrinterObj* can then be resurrecuted from the file using the
- * resurrect_printer_from_file() function
+ * This cpdb_printer_obj_t* can then be resurrecuted from the file using the
+ * cpdbResurrectPrinterFromFile() function
  */
-void pickle_printer_to_file(PrinterObj *p, const char *filename , const FrontendObj* parent_dialog);
+void cpdbPicklePrinterToFile(cpdb_printer_obj_t *p, const char *filename , const cpdb_frontend_obj_t* parent_dialog);
 
 /**
- * Recreates a PrinterObj from its serialized form stored in the given format 
+ * Recreates a cpdb_printer_obj_t from its serialized form stored in the given format 
  * and returns it.
  * 
  * @returns
- * the PrinterObj* if deserialization was succesfull
+ * the cpdb_printer_obj_t* if deserialization was succesfull
  * NULL otherwise
  */
-PrinterObj *resurrect_printer_from_file(const char *filename);
+cpdb_printer_obj_t *cpdbResurrectPrinterFromFile(const char *filename);
 
 /**
  * Finds the human readable English name of the setting.
  *
  * @param option_name : name of the setting
  */
-char *get_human_readable_option_name(PrinterObj *p, char *option_name);
+char *cpdbGetHumanReadableOptionName(cpdb_printer_obj_t *p, char *option_name);
 
 /**
  * Finds the human readable English name of the choice for the given setting.
@@ -345,7 +346,7 @@ char *get_human_readable_option_name(PrinterObj *p, char *option_name);
  * @param option_name : name of the setting
  * @param choice_name : value of the choice
  */
-char *get_human_readable_choice_name(PrinterObj *p, char *option_name, char *choice_name);
+char *cpdbGetHumanReadableChoiceName(cpdb_printer_obj_t *p, char *option_name, char *choice_name);
 
 /**
  * Finds the dimension for a given media-size
@@ -354,12 +355,12 @@ char *get_human_readable_choice_name(PrinterObj *p, char *option_name, char *cho
  * @param width : address of width of media-size to be returned
  * @param length : address of length of media-size to be returned
  */
-void get_media_size(PrinterObj *p, const char *media, int *width, int *length);
+void cpdbGetMediaSize(cpdb_printer_obj_t *p, const char *media, int *width, int *length);
 
 
-struct _AsyncObj {
-	PrinterObj *p;
-	async_callback caller_cb;
+struct cpdb_async_obj_s {
+	cpdb_printer_obj_t *p;
+	cpdb_async_callback caller_cb;
 	void *user_data;
 };
 
@@ -368,11 +369,11 @@ struct _AsyncObj {
  * 
  * @param caller_cb : callback function
  */
-void acquire_details(PrinterObj *p, async_callback caller_cb, void *user_data);
+void cpdbAcquireDetails(cpdb_printer_obj_t *p, cpdb_async_callback caller_cb, void *user_data);
 
 /************************************************************************************************/
 /**
-______________________________________ Settings __________________________________________
+______________________________________ cpdb_settings_t __________________________________________
 
 **/
 
@@ -380,7 +381,7 @@ ______________________________________ Settings ________________________________
  * Takes care of the settings the user sets with the help of the dialog.
  * These settings will be used when sending a print job
  */
-struct _Settings
+struct cpdb_settings_s
 {
     int count;
     GHashTable *table; /** [name] --> [value] **/
@@ -389,24 +390,24 @@ struct _Settings
 };
 
 /**
- * Get an empty Settings struct with no 'settings' in it
+ * Get an empty cpdb_settings_t struct with no 'settings' in it
  */
-Settings *get_new_Settings();
+cpdb_settings_t *cpdbGetNewSettings();
 
 /**
  * Copy settings from source to dest;
  * 
  * The previous values in dest will be overwritten
  */
-void copy_settings(const Settings *source, Settings *dest);
+void cpdbCopySettings(const cpdb_settings_t *source, cpdb_settings_t *dest);
 
 /**
- * Add the particular 'setting' to the Settings struct
+ * Add the particular 'setting' to the cpdb_settings_t struct
  * If the setting already exists, its value is updated instead.
  * 
- * Eg. add_setting(s,"copies","1") 
+ * Eg. cpdbAddSetting(s,"copies","1") 
  */
-void add_setting(Settings *, const char *name, const char *val);
+void cpdbAddSetting(cpdb_settings_t *, const char *name, const char *val);
 
 /**
  * Clear the setting specified by @name
@@ -415,66 +416,66 @@ void add_setting(Settings *, const char *name, const char *val);
  * TRUE , if the setting was cleared
  * FALSE , if the setting wasn't there and thus couldn't be cleared
  */
-gboolean clear_setting(Settings *, char *name);
+gboolean cpdbClearSetting(cpdb_settings_t *, char *name);
 
 /**
- * Serialize the Settings struct into a GVariant of type a(ss)
+ * Serialize the cpdb_settings_t struct into a GVariant of type a(ss)
  * so that it can be sent as an argument over D-Bus
  */
-GVariant *serialize_to_gvariant(Settings *s);
+GVariant *cpdbSerializeToGVariant(cpdb_settings_t *s);
 
 /**
  * Save the settings to disk ,
- * i.e write them to SETTINGS_FILE
+ * i.e write them to CPDB_SETTINGS_FILE
  */
-void save_to_disk(Settings *s);
+void cpdbSaveSettingsToDisk(cpdb_settings_t *s);
 
 /**
  * Reads the serialized settings stored in
- *  SETTINGS_FILE and creates a Settings* struct from it
+ *  CPDB_SETTINGS_FILE and creates a cpdb_settings_t* struct from it
  * 
- * The caller is responsible for freeing the returned Settings*
+ * The caller is responsible for freeing the returned cpdb_settings_t*
  */
-Settings *read_settings_from_disk();
+cpdb_settings_t *cpdbReadSettingsFromDisk();
 
-void delete_Settings(Settings *);
+void cpdbDeleteSettings(cpdb_settings_t *);
 
 /************************************************************************************************/
 /**
-______________________________________ Options __________________________________________
+______________________________________ cpdb_options_t __________________________________________
 
 **/
-struct _Options
+struct cpdb_options_s
 {
     int count;
-    GHashTable *table; /**[name] --> Option struct**/
+    GHashTable *table; /**[name] --> cpdb_option_t struct**/
 };
 
 /**
- * Get an empty Options struct with no 'options' in it
+ * Get an empty cpdb_options_t struct with no 'options' in it
  */
-Options *get_new_Options();
+cpdb_options_t *cpdbGetNewOptions();
 
 /************************************************************************************************/
 /**
-______________________________________ Option __________________________________________
+______________________________________ cpdb_option_t __________________________________________
 
 **/
-struct _Option
+struct cpdb_option_s
 {
     const char *option_name;
     int num_supported;
     char **supported_values;
     char *default_value;
 };
-void print_option(const Option *opt);
+void cpdbPrintOption(const cpdb_option_t *opt);
 
 /************************************************************************************************/
 /**
-______________________________________ Job __________________________________________
+______________________________________ cpdb_job_t __________________________________________
 
 **/
-struct _Job
+struct cpdb_job_s
 {
     char *job_id;
     char *title;
@@ -485,18 +486,18 @@ struct _Job
     char *submitted_at;
     int size;
 };
-void unpack_job_array(GVariant *var, int num_jobs, Job *jobs, char *backend_name);
+void cpdbUnpackJobArray(GVariant *var, int num_jobs, cpdb_job_t *jobs, char *backend_name);
 /**
  * ________________________________utility functions__________________________
  */
 
-void DBG_LOG(const char *msg, const char *error, int msg_level);
-char *concat(char *printer_id, char *backend_name);
+void CPDB_DEBUG_LOG(const char *msg, const char *error, int msg_level);
+char *cpdbConcat(char *printer_id, char *backend_name);
 /**
- * 'Unpack' (Deserialize) the GVariant returned in get_all_options
- * and fill the Options structure approriately
+ * 'Unpack' (Deserialize) the GVariant returned in cpdbGetAllOptions
+ * and fill the cpdb_options_t structure approriately
  */
-void unpack_options(GVariant *var, int num_options, Options *options);
+void cpdbUnpackOptions(GVariant *var, int num_options, cpdb_options_t *options);
 
 #ifdef __cplusplus
 }

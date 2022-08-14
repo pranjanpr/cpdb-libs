@@ -1,6 +1,6 @@
 #include "cpdb.h"
 
-gboolean get_boolean(const char *g)
+gboolean cpdbGetBoolean(const char *g)
 {
     if (!g)
         return FALSE;
@@ -11,7 +11,7 @@ gboolean get_boolean(const char *g)
     return FALSE;
 }
 
-char *get_string_copy(const char *str)
+char *cpdbGetStringCopy(const char *str)
 {
     if (str == NULL)
         return NULL;
@@ -20,7 +20,7 @@ char *get_string_copy(const char *str)
     return s;
 }
 
-void unpack_string_array(GVariant *variant, int num_val, char ***val)
+void cpdbUnpackStringArray(GVariant *variant, int num_val, char ***val)
 {
     GVariantIter *iter;
 
@@ -39,13 +39,13 @@ void unpack_string_array(GVariant *variant, int num_val, char ***val)
     for (i = 0; i < num_val; i++)
     {
         g_variant_iter_loop(iter, "(s)", &str);
-        array[i] = get_string_copy(str);
+        array[i] = cpdbGetStringCopy(str);
         printf(" %s\n", str);
     }
     *val = array;
 }
 
-GVariant *pack_string_array(int num_val, char **val)
+GVariant *cpdbPackStringArray(int num_val, char **val)
 {
     GVariantBuilder *builder;
     GVariant *values;
@@ -63,13 +63,13 @@ GVariant *pack_string_array(int num_val, char **val)
     return values;
 }
 
-char *get_absolute_path(const char *file_path)
+char *cpdbGetAbsolutePath(const char *file_path)
 {
     if (!file_path)
         return NULL;
 
     if (file_path[0] == '/')
-        return get_string_copy(file_path);
+        return cpdbGetStringCopy(file_path);
 
     if (file_path[0] == '~')
     {
@@ -96,7 +96,7 @@ char *get_absolute_path(const char *file_path)
     printf("%s\n", fp);
     return fp;
 }
-char *extract_file_name(const char *file_path)
+char *cpdbExtractFileName(const char *file_path)
 {
     if (!file_path)
         return NULL;
