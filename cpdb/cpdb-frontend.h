@@ -1,5 +1,5 @@
-#ifndef _CPDB_FRONTEND_H_
-#define _CPDB_FRONTEND_H_
+#ifndef _CPDB_CPDB_FRONTEND_H_
+#define _CPDB_CPDB_FRONTEND_H_
 
 #include <glib.h>
 
@@ -599,4 +599,4 @@ void cpdbUnpackOptions(int num_options, GVariant *var, int num_media, GVariant *
 }
 #endif
 
-#endif /* !_CPDB_FRONTEND_H_ */
+#endif /* !_CPDB_CPDB_FRONTEND_H_ */

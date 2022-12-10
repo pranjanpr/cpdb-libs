@@ -1,5 +1,5 @@
-#ifndef _CPDB_H_
-#define _CPDB_H_
+#ifndef _CPDB_CPDB_H_
+#define _CPDB_CPDB_H_
 
 #include <glib.h>
 
@@ -97,4 +97,4 @@ char *cpdbExtractFileName(const char* file_path);
 }
 #endif
 
-#endif /* !_CPDB_H_ */
+#endif /* !_CPDB_CPDB_H_ */
