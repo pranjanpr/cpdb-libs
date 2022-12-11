@@ -6,18 +6,18 @@ The frontend library also provides some extra functionality to deal with Printer
 
 ## Background
 
-The Common Print Dialog Backends (CPDB) project of OpenPrinting is about separating the print dialogs of different GUI toolkits and applications (GTK, Qt, LibreOffice, ...) from the different print technologies (CUPS/IPP, cloud printing services, ...) so that they can get developed independently and so always from all applications one can print with all print technologies and changes in the print technologies get supported quickly.
+The Common Print Dialog Backends (CPDB) project of OpenPrinting is about separating the print dialogs of different GUI toolkits and applications (GTK, Qt, LibreOffice, Firefox, Chromium, ...) from the different print technologies (CUPS/IPP, cloud printing services, ...) so that they can get developed independently and so always from all applications one can print with all print technologies and changes in the print technologies get supported quickly.
 
-If one opens the print dialog, the dialog will not talk directly to CUPS, Google Cloud Print, or any other printing system. For this communication there are the backends. The dialog will find all available backend and sends commands to them, for listing all available printers, giving property/option lists for the selected printers, and printing on the selected printer. This communication is done via D-Bus. So the backends are easily exchangeable and for getting support for a new print technology only its backend needs to get added.
+If one opens the print dialog, the dialog will not talk directly to CUPS, a cloud printing service, or any other printing system. For this communication there are the backends. The dialog will find all available backends and sends commands to them, for listing all available printers, giving property/option lists for the selected printer, and printing on the selected printer. This communication is done via D-Bus. So the backends are easily exchangeable and for getting support for a new print technology only its backend needs to get added.
 
 ## Dependencies
 
  - GLIB 2.0:
-`sudo apt install libglib2.0-dev`
+   `sudo apt install libglib2.0-dev`
 
  - LIBTOOL:
-`sudo apt install libtool`
- 
+   `sudo apt install libtool`
+
 ## Build and installation
 
 
@@ -27,8 +27,7 @@ If one opens the print dialog, the dialog will not talk directly to CUPS, Google
     $ sudo make install
     $ sudo ldconfig
 
-
-Use the sample frontend client to check that the library and the installed backends work as expected:
+Also install at least one of the backends (cpdb-backend-...).
 
 ## Testing the library
 
@@ -41,7 +40,7 @@ The project also includes a sample command line frontend (using the `cpdb-libs-f
 The list of printers from various print technologies should start appearing automatically. Type `help` to get the list of available commands. Make sure to stop the frontend using the `stop` command only.
 
 The library also provides support for serializing a printer. Use the `pickle-printer` command to serialize it, and run the `pickle_test` executable after that to deserialize and test it.
-    
+
 
 ## Using the libraries for developing print backends and dialogs.
 
