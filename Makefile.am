@@ -1,4 +1,4 @@
-EXTRA_DIST = demo/*.c demo/Makefile README.md LICENSE.md autogen.sh
+EXTRA_DIST = demo/*.c demo/Makefile README.md LICENSE.md COPYING CHANGES.md autogen.sh
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = cpdb
 #ACLOCAL_AMFLAGS = '-I m4'
