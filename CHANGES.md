@@ -1,4 +1,4 @@
-# CHANGES - Common Print Didalog Backends - Libraries - v2.0b1 - 2022-12-11
+# CHANGES - Common Print Dialog Backends - Libraries - v2.0b1 - 2022-12-11
 
 ## CHANGES IN V2.0b1 (11th December 2022)
 
