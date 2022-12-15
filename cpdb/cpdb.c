@@ -130,3 +130,62 @@ char *cpdbExtractFileName(const char *file_path)
     }
     return file_name_ptr;
 }
+
+char *cpdbGetUserConfDir()
+{
+    char *config_dir = NULL, *env_xch, *env_home;
+
+    if (env_xch = getenv("XDG_CONFIG_HOME"))
+    {
+        config_dir = malloc(strlen(env_xch) + 6);
+        sprintf(config_dir, "%s/cpdb", env_xch);
+    }
+    else if (env_home = getenv("HOME"))
+    {
+        config_dir = malloc(strlen(env_home) + 14);
+        sprintf(config_dir, "%s/.config/cpdb", env_home);
+    }
+
+    if (config_dir && (access(config_dir, F_OK) == 0 || mkdir(config_dir, CPDB_USRCONFDIR_PERM) == 0))
+        return config_dir;
+
+    return NULL;
+}
+
+char *cpdbGetSysConfDir()
+{
+    char *config_dir = NULL, *env_xcd, *path;
+
+#ifdef CPDB_SYSCONFDIR
+    config_dir = malloc(strlen(CPDB_SYSCONFDIR) + 6);
+    sprintf(config_dir, "%s/cpdb", CPDB_SYSCONFDIR);
+    if (access(config_dir, F_OK) == 0 || mkdir(config_dir, CPDB_SYSCONFDIR_PERM) == 0)
+        return config_dir;
+#endif
+
+    if (env_xcd = getenv("XDG_CONFIG_DIRS"))
+    {
+        env_xcd = cpdbGetStringCopy(env_xcd);
+        path = strtok(env_xcd, ":");
+        while (path != NULL)
+        {
+            config_dir = malloc(strlen(path) + 6);
+            sprintf(config_dir, "%s/cpdb", path);
+            if (access(config_dir, F_OK) == 0 || mkdir(config_dir, CPDB_SYSCONFDIR_PERM) == 0)
+            {
+                free(env_xcd);
+                return config_dir;
+            }
+
+            free(config_dir);
+            path = strtok(NULL, ":");
+        }
+        free(env_xcd);
+    }
+        
+    config_dir = "/etc/cpdb";
+    if (access(config_dir, F_OK) == 0 || mkdir(config_dir, CPDB_SYSCONFDIR_PERM) == 0)
+        return config_dir;
+
+    return NULL;
+}

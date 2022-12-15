@@ -130,7 +130,7 @@ void cpdbActivateBackends(cpdb_frontend_obj_t *f)
 {
     DIR *d;
     struct dirent *dir;
-    d = opendir(CPDB_DBUS_DIR);
+    d = opendir(CPDB_BACKEND_INFO_DIR);
     int len = strlen(CPDB_BACKEND_PREFIX);
     PrintBackend *proxy;
 
@@ -143,10 +143,10 @@ void cpdbActivateBackends(cpdb_frontend_obj_t *f)
             {
                 backend_suffix = cpdbGetStringCopy((dir->d_name) + len);
 
-		char *msg = malloc(sizeof(char) * (strlen(backend_suffix) + 20));
-		sprintf(msg, "Found backend %s", backend_suffix);
+                char *msg = malloc(sizeof(char) * (strlen(backend_suffix) + 20));
+                sprintf(msg, "Found backend %s", backend_suffix);
                 CPDB_DEBUG_LOG(msg, "", CPDB_DEBUG_LEVEL_INFO);
-		free(msg);
+                free(msg);
 
                 proxy = cpdbCreateBackendFromFile(dir->d_name);
 
@@ -166,8 +166,8 @@ PrintBackend *cpdbCreateBackendFromFile(const char *backend_file_name)
     PrintBackend *proxy;
     char *backend_name = cpdbGetStringCopy(backend_file_name);
 
-    char *path = malloc(sizeof(char) * (strlen(CPDB_DBUS_DIR) + strlen(backend_file_name) + 2));
-    sprintf(path, "%s/%s", CPDB_DBUS_DIR, backend_file_name);
+    char *path = malloc(sizeof(char) * (strlen(CPDB_BACKEND_INFO_DIR) + strlen(backend_file_name) + 2));
+    sprintf(path, "%s/%s", CPDB_BACKEND_INFO_DIR, backend_file_name);
 
     FILE *file = fopen(path, "r");
     if (file == NULL)
@@ -278,7 +278,7 @@ cpdb_printer_obj_t *cpdbFindPrinterObj(cpdb_frontend_obj_t *f, const char *print
     return p;
 }
 
-char *cpdbGetDefaultPrinterForBackend(cpdb_frontend_obj_t *f, const char *backend_name)
+cpdb_printer_obj_t *cpdbGetDefaultPrinterForBackend(cpdb_frontend_obj_t *f, const char *backend_name)
 {
     PrintBackend *proxy = g_hash_table_lookup(f->backend, backend_name);
     if (!proxy)
@@ -292,17 +292,24 @@ char *cpdbGetDefaultPrinterForBackend(cpdb_frontend_obj_t *f, const char *backen
     }
     char *def;
     print_backend_call_get_default_printer_sync(proxy, &def, NULL, NULL);
-    return def;
+    return cpdbFindPrinterObj(f, def, backend_name);
+}
+
+char *getDefaultPrinterPath(char *conf_dir)
+{
+    char *path;
+
+    path = malloc(strlen(conf_dir) + strlen(CPDB_DEFAULT_PRINTERS_FILE) + 2);
+    sprintf(path, "%s/%s", conf_dir, CPDB_DEFAULT_PRINTERS_FILE);
+    return path;
 }
 
 GList *cpdbLoadDefaultPrinters(char *path)
 {
-    char *absolutePath = cpdbGetAbsolutePath(path);
-    FILE *fp = fopen(absolutePath, "r");
-
-    if (fp == NULL)
+    FILE *fp;
+    if ((fp = fopen(path, "r")) == NULL)
     {
-        CPDB_DEBUG_LOG("Couldn't open file for reading", absolutePath, CPDB_DEBUG_LEVEL_WARN);
+        CPDB_DEBUG_LOG("Couldn't open file for reading", path, CPDB_DEBUG_LEVEL_WARN);
         return NULL;
     }
 
@@ -332,17 +339,27 @@ cpdb_printer_obj_t *cpdbGetDefaultPrinter(cpdb_frontend_obj_t *f)
     
     gpointer key, value;
     GHashTableIter iter;
-    char *printer_id, *backend_name;
+    char *conf_dir, *path, *printer_id, *backend_name;
     cpdb_printer_obj_t *default_printer = NULL;
     GList *printer, *user_printers, *system_printers, *printers = NULL;
     
     /** Find a default printer from user config first, before trying system wide config **/
-    user_printers = cpdbLoadDefaultPrinters(CPDB_USER_DEFAULT_PRINTERS);
-    if (user_printers)
-        printers = g_list_concat(printers, user_printers);
-    system_printers = cpdbLoadDefaultPrinters(CPDB_SYSTEM_DEFAULT_PRINTERS);
-    if (system_printers)
-        printers = g_list_concat(printers, system_printers);
+    conf_dir = cpdbGetUserConfDir();
+    if (conf_dir)
+    {
+        path = getDefaultPrinterPath(conf_dir);
+        printers = g_list_concat(printers, cpdbLoadDefaultPrinters(path));
+        free(path);
+        free(conf_dir);
+    }
+    conf_dir = cpdbGetSysConfDir();
+    if (conf_dir)
+    {
+        path = getDefaultPrinterPath(conf_dir);
+        printers = g_list_concat(printers, cpdbLoadDefaultPrinters(path));
+        free(path);
+        free(conf_dir);
+    }
     
     for (printer = printers; printer != NULL; printer = printer->next)
     {
@@ -362,36 +379,28 @@ cpdb_printer_obj_t *cpdbGetDefaultPrinter(cpdb_frontend_obj_t *f)
     CPDB_DEBUG_LOG("Couldn't find a valid default printer", "", CPDB_DEBUG_LEVEL_WARN);
 
     /**  Fallback to default CUPS printer if CUPS backend exists **/
-    printer_id = cpdbGetDefaultPrinterForBackend(f, "CUPS");
-    default_printer = cpdbFindPrinterObj(f, printer_id, "CUPS");
+    default_printer = cpdbGetDefaultPrinterForBackend(f, "CUPS");
     if (default_printer)
         return default_printer;
     CPDB_DEBUG_LOG("Couldn't find a valid default CUPS printer", "", CPDB_DEBUG_LEVEL_WARN);
     
     /** Fallback to default FILE printer if FILE backend exists **/
-    printer_id = cpdbGetDefaultPrinterForBackend(f, "FILE");
-    default_printer = cpdbFindPrinterObj(f, printer_id, "FILE");
+    default_printer = cpdbGetDefaultPrinterForBackend(f, "FILE");
     if (default_printer)
         return default_printer;
     CPDB_DEBUG_LOG("Couldn't find a valid default FILE printer", "", CPDB_DEBUG_LEVEL_WARN);
     
-    /** Fallback to default printer of first backend found **/
+    /** Fallback to the default printer of first backend found **/
     g_hash_table_iter_init(&iter, f->backend);
     g_hash_table_iter_next(&iter, &key, &value);
 
     backend_name = (char *) key;
-    printer_id = cpdbGetDefaultPrinterForBackend(f, backend_name);
-    default_printer = cpdbFindPrinterObj(f, printer_id, backend_name);
+    default_printer = cpdbGetDefaultPrinterForBackend(f, backend_name);
     if (default_printer)
         return default_printer;
     CPDB_DEBUG_LOG("Couldn't find a valid backend", "", CPDB_DEBUG_LEVEL_WARN);
     
-    /** Fallback to first printer found **/
-    g_hash_table_iter_init(&iter, f->printer);
-    g_hash_table_iter_next(&iter, &key, &value);
-    default_printer = (cpdb_printer_obj_t *) value;
-    
-    return default_printer;
+    return NULL;
 }
 
 int cpdbSetDefaultPrinter(char *path, cpdb_printer_obj_t *p)
@@ -403,12 +412,12 @@ int cpdbSetDefaultPrinter(char *path, cpdb_printer_obj_t *p)
     sprintf(printer_data, "%s#%s", p->id, p->backend_name);
     printers = cpdbLoadDefaultPrinters(path);
     
-    char *absolutePath = cpdbGetAbsolutePath(path);
-    FILE *fp = fopen(absolutePath, "w");
+    FILE *fp = fopen(path, "w");
     if (fp == NULL)
     {
-        CPDB_DEBUG_LOG("Couldn't open file for writing", absolutePath, CPDB_DEBUG_LEVEL_ERR);
-        return 0;
+        CPDB_DEBUG_LOG("Couldn't open file for writing", path, CPDB_DEBUG_LEVEL_ERR);
+        free(printer_data);
+        return -1;
     }
 
     /** Delete duplicate entries **/
@@ -433,17 +442,43 @@ int cpdbSetDefaultPrinter(char *path, cpdb_printer_obj_t *p)
     g_list_free_full(printers, free);
 
     fclose(fp);
-    return 1;
+    return 0;
 }
 
 int cpdbSetUserDefaultPrinter(cpdb_printer_obj_t *p)
 {
-    return cpdbSetDefaultPrinter(CPDB_USER_DEFAULT_PRINTERS, p);
+    int ret;
+    char *conf_dir, *path;
+
+    if ((conf_dir = cpdbGetUserConfDir()) == NULL)
+    {
+        CPDB_DEBUG_LOG("Couldn't obtain user config directory", "", CPDB_DEBUG_LEVEL_WARN);
+        return -1;
+    }
+    path = getDefaultPrinterPath(conf_dir);
+    ret = cpdbSetDefaultPrinter(path, p);
+
+    free(path);
+    free(conf_dir);
+    return ret;
 }
 
 int cpdbSetSystemDefaultPrinter(cpdb_printer_obj_t *p)
 {
-    return cpdbSetDefaultPrinter(CPDB_SYSTEM_DEFAULT_PRINTERS, p);
+    int ret;
+    char *conf_dir, *path;
+
+    if ((conf_dir = cpdbGetSysConfDir()) == NULL)
+    {
+        CPDB_DEBUG_LOG("Couldn't obtain system config directory", "", CPDB_DEBUG_LEVEL_WARN);
+        return -1;
+    }
+    path = getDefaultPrinterPath(conf_dir);
+    ret = cpdbSetDefaultPrinter(path, p);
+
+    free(path);
+    free(conf_dir);
+    return ret;
 }
 
 int cpdbGetAllJobs(cpdb_frontend_obj_t *f, cpdb_job_t **j, gboolean active_only)
@@ -988,31 +1023,56 @@ GVariant *cpdbSerializeToGVariant(cpdb_settings_t *s)
 
 void cpdbSaveSettingsToDisk(cpdb_settings_t *s)
 {
-    char *path = cpdbGetAbsolutePath(CPDB_SETTINGS_FILE);
-    FILE *fp = fopen(path, "w");
-
-    fprintf(fp, "%d\n", s->count);
-
+    FILE *fp;
+    char *conf_dir, *path;
     GHashTableIter iter;
     gpointer key, value;
+
+    if ((conf_dir = cpdbGetUserConfDir())== NULL)
+    {
+        CPDB_DEBUG_LOG("Error saving settings to disk", "Couldn't obtain user config directory", CPDB_DEBUG_LEVEL_WARN);
+        return;
+    }
+    path = malloc(strlen(conf_dir) + strlen(CPDB_PRINT_SETTINGS_FILE) + 2);
+    sprintf(path, "%s/%s", conf_dir, CPDB_PRINT_SETTINGS_FILE);
+
+    if ((fp = fopen(path, "w")) == NULL)
+    {
+        CPDB_DEBUG_LOG("Couldn't open file for writing", path, CPDB_DEBUG_LEVEL_WARN);
+        return;
+    }
+    fprintf(fp, "%d\n", s->count);
+    
     g_hash_table_iter_init(&iter, s->table);
     while (g_hash_table_iter_next(&iter, &key, &value))
     {
         fprintf(fp, "%s#%s#\n", (char *)key, (char *)value);
     }
+
     fclose(fp);
     free(path);
+    free(conf_dir);
 }
 
 cpdb_settings_t *cpdbReadSettingsFromDisk()
 {
-    char *path = cpdbGetAbsolutePath(CPDB_SETTINGS_FILE);
-    FILE *fp = fopen(path, "r");
-    if (fp == NULL)
+    FILE *fp;
+    char *conf_dir, *path;
+
+    if ((conf_dir = cpdbGetUserConfDir())== NULL)
     {
-        CPDB_DEBUG_LOG("No previous settings found.", "", CPDB_DEBUG_LEVEL_WARN);
+        CPDB_DEBUG_LOG("No previous settings found", "Couldn't obtain user config directory", CPDB_DEBUG_LEVEL_WARN);
         return NULL;
     }
+    path = malloc(strlen(conf_dir) + strlen(CPDB_PRINT_SETTINGS_FILE) + 2);
+    sprintf(path, "%s/%s", conf_dir, CPDB_PRINT_SETTINGS_FILE);
+
+    if ((fp = fopen(path, "r")) == NULL)
+    {
+        CPDB_DEBUG_LOG("No previous settings found", path, CPDB_DEBUG_LEVEL_WARN);
+        return NULL;
+    }
+
     cpdb_settings_t *s = cpdbGetNewSettings();
     int count;
     fscanf(fp, "%d\n", &count);
@@ -1029,8 +1089,10 @@ cpdb_settings_t *cpdbReadSettingsFromDisk()
         printf("%s  : %s \n", name, value);
         cpdbAddSetting(s, name, value);
     }
+
     fclose(fp);
     free(path);
+    free(conf_dir);
     return s;
 }
 

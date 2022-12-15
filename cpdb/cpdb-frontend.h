@@ -22,9 +22,9 @@ extern "C"
 
 #define CPDB_DIALOG_BUS_NAME "org.openprinting.PrintFrontend"
 #define CPDB_DIALOG_OBJ_PATH "/"
-#define CPDB_DBUS_DIR "/usr/share/print-backends"
 #define CPDB_BACKEND_PREFIX "org.openprinting.Backend."
-#define CPDB_SETTINGS_FILE "~/.CPD-print-settings"
+#define CPDB_PRINT_SETTINGS_FILE "print-settings"
+#define CPDB_DEFAULT_PRINTERS_FILE "default-printers"
 
 typedef struct cpdb_frontend_obj_s cpdb_frontend_obj_t;
 typedef struct cpdb_printer_obj_s cpdb_printer_obj_t;
@@ -166,7 +166,7 @@ cpdb_printer_obj_t *cpdbFindPrinterObj(cpdb_frontend_obj_t *, const char *printe
  *                          or
  *                          the complete name ("org.openprinting.Backend.CUPS")
  */
-char *cpdbGetDefaultPrinterForBackend(cpdb_frontend_obj_t *, const char *backend_name);
+cpdb_printer_obj_t *cpdbGetDefaultPrinterForBackend(cpdb_frontend_obj_t *, const char *backend_name);
 
 /**
  * Returns a GList of all default printers in given config file
@@ -490,13 +490,13 @@ GVariant *cpdbSerializeToGVariant(cpdb_settings_t *s);
 
 /**
  * Save the settings to disk ,
- * i.e write them to CPDB_SETTINGS_FILE
+ * i.e write them to CPDB_PRINT_SETTINGS_FILE
  */
 void cpdbSaveSettingsToDisk(cpdb_settings_t *s);
 
 /**
  * Reads the serialized settings stored in
- *  CPDB_SETTINGS_FILE and creates a cpdb_settings_t* struct from it
+ *  CPDB_PRINT_SETTINGS_FILE and creates a cpdb_settings_t* struct from it
  *
  * The caller is responsible for freeing the returned cpdb_settings_t*
  */

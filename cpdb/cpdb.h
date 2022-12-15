@@ -7,20 +7,26 @@
 extern "C" {
 #endif
 
-
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <pwd.h>
 #include <cpdb/backend-interface.h>
 #include <cpdb/frontend-interface.h>
+
+#define CPDB_USRCONFDIR_PERM 0755
+#define CPDB_SYSCONFDIR_PERM 0755
 
 #define CPDB_PRINTER_ADDED_ARGS "(sssssbss)"
 #define CPDB_JOB_ARGS "(ssssssi)"
 #define CPDB_JOB_ARRAY_ARGS "a(ssssssi)"
 #define cpdbNewCStringArray(x) ((char **)(malloc(sizeof(char *) * x)))
+
+char *cpdbGetSysConfDir();
+char *cpdbGetUserConfDir();
 
 /*********cpdb_option_t related functions*****************/
 

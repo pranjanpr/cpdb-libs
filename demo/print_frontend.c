@@ -49,7 +49,6 @@ int main(int argc, char **argv)
 
 gpointer parse_commands(gpointer user_data)
 {
-    printf("parse_commands\n");
     fflush(stdout);
     char buf[100];
     while (1)
@@ -189,7 +188,10 @@ gpointer parse_commands(gpointer user_data)
         else if (strcmp(buf, "get-default-printer") == 0)
         {
             cpdb_printer_obj_t *p = cpdbGetDefaultPrinter(f);
-            printf("%s#%s\n", p->name, p->backend_name);
+            if (p)
+                printf("%s#%s\n", p->name, p->backend_name);
+            else
+                printf("No default printer found\n");
         }
         else if (strcmp(buf, "get-default-printer-for-backend") == 0)
         {
@@ -199,7 +201,8 @@ gpointer parse_commands(gpointer user_data)
              * Backend name = The last part of the backend dbus service
              * Eg. "CUPS" or "GCP"
              */
-            printf("%s\n", cpdbGetDefaultPrinterForBackend(f, backend_name));
+            cpdb_printer_obj_t *p = cpdbGetDefaultPrinterForBackend(f, backend_name);
+            printf("%s\n", p->name);
         }
         else if (strcmp(buf, "set-user-default-printer") == 0)
         {
@@ -209,7 +212,7 @@ gpointer parse_commands(gpointer user_data)
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             if (p)
             {
-                if (cpdbSetUserDefaultPrinter(p))
+                if (cpdbSetUserDefaultPrinter(p) == 0)
                     printf("Set printer as user default\n");
                 else
                     printf("Couldn't set printer as user default\n");
