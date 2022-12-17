@@ -212,7 +212,7 @@ gpointer parse_commands(gpointer user_data)
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             if (p)
             {
-                if (cpdbSetUserDefaultPrinter(p) == 0)
+                if (cpdbSetUserDefaultPrinter(p))
                     printf("Set printer as user default\n");
                 else
                     printf("Couldn't set printer as user default\n");
@@ -365,7 +365,7 @@ void display_help()
     printf("%s\n", "hide-temporary");
     printf("%s\n", "unhide-temporary");
     //printf("%s\n", "ping <printer id> ");
-    printf("%s\n", "get-default-printer <backend name>");
+    printf("%s\n", "get-default-printer");
     printf("%s\n", "get-default-printer-for-backend <backend name>");
     printf("%s\n", "set-user-default-printer <printer id> <backend name>");
     printf("%s\n", "set-system-default-printer <printer id> <backend name>");

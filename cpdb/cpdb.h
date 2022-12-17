@@ -17,6 +17,11 @@ extern "C" {
 #include <cpdb/backend-interface.h>
 #include <cpdb/frontend-interface.h>
 
+/* buffer sizes */
+#define CPDB_BSIZE 512
+
+/* config files directory permissions, 
+ * if needed to be created */
 #define CPDB_USRCONFDIR_PERM 0755
 #define CPDB_SYSCONFDIR_PERM 0755
 
@@ -25,19 +30,30 @@ extern "C" {
 #define CPDB_JOB_ARRAY_ARGS "a(ssssssi)"
 #define cpdbNewCStringArray(x) ((char **)(malloc(sizeof(char *) * x)))
 
-char *cpdbGetSysConfDir();
-char *cpdbGetUserConfDir();
-
-/*********cpdb_option_t related functions*****************/
-
-
+/* Convert string to gboolean */
 gboolean cpdbGetBoolean(const char *);
-char *cpdbGetStringCopy(const char *);
+/* Concatenate two strings */
+char *cpdbConcat(const char *s1, const char *s2);
+/* Concatenate two strings with separator "#" */
+char *cpdbConcatSep(const char *s1, const char *s2);
+/* Concatenate two paths */
+char *cpdbConcatPath(const char *s1, const char *s2);
+/* Get string copy */
+char *cpdbGetStringCopy(const char *s);
+/* Get directory for user configuration files */
+char *cpdbGetUserConfDir();
+/* Get directory for system wide configuration files */
+char *cpdbGetSysConfDir();
+/* Get absolute path from relative path */
+char *cpdbGetAbsolutePath(const char *file_path);
+/* Extract file name for path */
+char *cpdbExtractFileName(const char* file_path);
+
+/* Packing/Unpacking utility functions */
 void cpdbUnpackStringArray(GVariant *variant, int num_val, char ***val);
 GVariant *cpdbPackStringArray(int num_val, char **val);
 GVariant *cpdbPackMediaArray(int num_val, int (*margins)[4]);
-char *cpdbGetAbsolutePath(const char *file_path);
-char *cpdbExtractFileName(const char* file_path);
+
 /*********LISTING OF ALL POSSIBLE OPTIONS*****/
 //Rename these to something better if needed
 /**
