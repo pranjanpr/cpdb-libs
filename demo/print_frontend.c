@@ -62,6 +62,11 @@ gpointer parse_commands(gpointer user_data)
             g_message("Stopping front end..\n");
             exit(0);
         }
+        else if (strcmp(buf, "restart") == 0)
+        {
+            cpdbDisconnectFromDBus(f);
+            cpdbConnectToDBus(f);
+        }
         else if (strcmp(buf, "refresh") == 0)
         {
             cpdbRefreshPrinterList(f);

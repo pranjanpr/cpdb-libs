@@ -69,20 +69,12 @@ static void on_printer_removed(GDBusConnection *connection,
     f->rem_cb(p);
 }
 
-static void on_bus_acquired(GDBusConnection *connection,
-                            const gchar *name,
-                            gpointer user_data)
-{
-    cpdbDebugLog("Acquired bus", CPDB_DEBUG_LEVEL_INFO);
-}
-
 static void on_name_acquired(GDBusConnection *connection,
                              const gchar *name,
                              gpointer user_data)
 {
-    cpdb_frontend_obj_t *f = (cpdb_frontend_obj_t *)user_data;
-    f->connection = connection;
     GError *error = NULL;
+    cpdb_frontend_obj_t *f = user_data;
 
     cpdbDebugLog("Acquired bus name", CPDB_DEBUG_LEVEL_INFO);
     
@@ -130,22 +122,57 @@ static void on_name_lost(GDBusConnection *connection,
     cpdbDebugLog("Lost bus name", CPDB_DEBUG_LEVEL_INFO);
 }
 
+GDBusConnection *get_dbus_connection()
+{
+    gchar *bus_addr;
+    GError *error = NULL;
+    GDBusConnection *connection;
+    
+    bus_addr = g_dbus_address_get_for_bus_sync(G_BUS_TYPE_SESSION,
+                                               NULL,
+                                               &error);
+    
+    connection = g_dbus_connection_new_for_address_sync(bus_addr,
+                                                        G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT |
+                                                        G_DBUS_CONNECTION_FLAGS_MESSAGE_BUS_CONNECTION,
+                                                        NULL,
+                                                        NULL,
+                                                        &error);
+    if (error)
+    {
+        cpdbDebugLog2("Error acquiring bus connection",
+                      error->message,
+                      CPDB_DEBUG_LEVEL_ERR);
+        return NULL;
+    }
+    cpdbDebugLog("Acquired bus connection", CPDB_DEBUG_LEVEL_INFO);
+    
+    return connection;
+}
+
 void cpdbConnectToDBus(cpdb_frontend_obj_t *f)
 {
-    g_bus_own_name(G_BUS_TYPE_SESSION,
-                   f->bus_name,
-                   0,                //flags
-                   on_bus_acquired,  //bus_acquired_handler
-                   on_name_acquired, //name acquired handler
-                   on_name_lost,     //name_lost handler
-                   f,                //user_data
-                   NULL);            //user_data free function
+    if ((f->connection = get_dbus_connection()) == NULL)
+    {
+        cpdbDebugLog("Couldn't connect to DBus", CPDB_DEBUG_LEVEL_ERR);
+        return;
+    }
+    
+    f->own_id = g_bus_own_name_on_connection(f->connection,
+                                             f->bus_name,
+                                             0,
+                                             on_name_acquired,
+                                             on_name_lost,
+                                             f,
+                                             NULL);
 }
 
 void cpdbDisconnectFromDBus(cpdb_frontend_obj_t *f)
 {
     print_frontend_emit_stop_listing(f->skeleton);
     g_dbus_connection_flush_sync(f->connection, NULL, NULL);
+    
+    g_bus_unown_name(f->own_id);
     g_dbus_connection_close_sync(f->connection, NULL, NULL);
 }
 
@@ -171,7 +198,8 @@ void cpdbActivateBackends(cpdb_frontend_obj_t *f)
                               backend_suffix,
                               CPDB_DEBUG_LEVEL_INFO);
 
-                proxy = cpdbCreateBackendFromFile(dir->d_name);
+                proxy = cpdbCreateBackendFromFile(f->connection,
+                                                  dir->d_name);
 
                 g_hash_table_insert(f->backend, backend_suffix, proxy);
                 f->num_backends++;
@@ -184,7 +212,8 @@ void cpdbActivateBackends(cpdb_frontend_obj_t *f)
     }
 }
 
-PrintBackend *cpdbCreateBackendFromFile(const char *backend_file_name)
+PrintBackend *cpdbCreateBackendFromFile(GDBusConnection *connection,
+                                        const char *backend_file_name)
 {
     FILE *file;
     PrintBackend *proxy;
@@ -197,7 +226,7 @@ PrintBackend *cpdbCreateBackendFromFile(const char *backend_file_name)
     
     if ((file = fopen(path, "r")) == NULL)
     {
-        cpdbDebugLog("Error creating backend", CPDB_DEBUG_LEVEL_ERR);
+        cpdbDebugLog("Error creating backend.", CPDB_DEBUG_LEVEL_ERR);
         cpdbDebugLog2("Couldn't open file for reading",
                       path,
                       CPDB_DEBUG_LEVEL_ERR);
@@ -208,12 +237,12 @@ PrintBackend *cpdbCreateBackendFromFile(const char *backend_file_name)
     fclose(file);
     free(path);
     
-    proxy = print_backend_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION,
-                                                 0,
-                                                 backend_name,
-                                                 obj_path,
-                                                 NULL,
-                                                 &error);
+    proxy = print_backend_proxy_new_sync(connection,
+                                         0,
+                                         backend_name,
+                                         obj_path,
+                                         NULL,
+                                         &error);
     if (error)
     {
         char *msg = malloc(sizeof(char) * (strlen(backend_name) + 40));
@@ -332,9 +361,14 @@ cpdb_printer_obj_t *cpdbGetDefaultPrinterForBackend(cpdb_frontend_obj_t *f,
     proxy = g_hash_table_lookup(f->backend, backend_name);
     if (proxy == NULL)
     {
-        if ((proxy = cpdbCreateBackendFromFile(backend_name)) == NULL)
+        cpdbDebugLog2("Couldn't find backend proxy",
+                      backend_name,
+                      CPDB_DEBUG_LEVEL_WARN);
+    
+        proxy = cpdbCreateBackendFromFile(f->connection, backend_name);
+        if (proxy == NULL)
         {
-            cpdbDebugLog2("Couldn't find backend",
+            cpdbDebugLog2("Couldn't create backend proxy",
                           backend_name,
                           CPDB_DEBUG_LEVEL_ERR);
             return NULL;
@@ -997,7 +1031,8 @@ cpdb_printer_obj_t *cpdbResurrectPrinterFromFile(const char *filename)
 {
     FILE *fp;
     int count;
-    char line[CPDB_BSIZE];
+    char buf[CPDB_BSIZE];
+    GDBusConnection *connection;
     char *name, *value, *path, *previous_parent_dialog, *backend_file_name;
     GError *error = NULL;
     cpdb_printer_obj_t *p;
@@ -1017,21 +1052,29 @@ cpdb_printer_obj_t *cpdbResurrectPrinterFromFile(const char *filename)
     cpdbDebugLog2("Ressurecting printer from file",
                   path,
                   CPDB_DEBUG_LEVEL_INFO);
+    free(path);
 
-    fgets(line, CPDB_BSIZE, fp);
-    previous_parent_dialog = cpdbGetStringCopy(strtok(line, "#"));
+    fgets(buf, sizeof(buf), fp);
+    previous_parent_dialog = cpdbGetStringCopy(strtok(buf, "#"));
     cpdbDebugLog2("Previous parent dialog",
                   previous_parent_dialog,
                   CPDB_DEBUG_LEVEL_INFO);
 
-    fgets(line, CPDB_BSIZE, fp);
-    p->backend_name = cpdbGetStringCopy(strtok(line, "#"));
+    fgets(buf, sizeof(buf), fp);
+    p->backend_name = cpdbGetStringCopy(strtok(buf, "#"));
     cpdbDebugLog2("Backend name",
                   p->backend_name,
                   CPDB_DEBUG_LEVEL_INFO);
     
     backend_file_name = cpdbConcat(CPDB_BACKEND_PREFIX, p->backend_name);
-    p->backend_proxy = cpdbCreateBackendFromFile(backend_file_name);
+    if ((connection = get_dbus_connection()) == NULL)
+    {
+        cpdbDebugLog("Error resurrecting printer", CPDB_DEBUG_LEVEL_ERR);
+        fclose(fp);
+        return NULL;
+    }
+    p->backend_proxy = cpdbCreateBackendFromFile(connection,
+                                                 backend_file_name);
     free(backend_file_name);
     print_backend_call_replace_sync(p->backend_proxy, 
                                     previous_parent_dialog, 
@@ -1043,27 +1086,26 @@ cpdb_printer_obj_t *cpdbResurrectPrinterFromFile(const char *filename)
                       error->message, 
                       CPDB_DEBUG_LEVEL_ERR);
         fclose(fp);
-        free(path);
         return NULL;
     }
 
-    fgets(line, CPDB_BSIZE, fp);
-    p->id = cpdbGetStringCopy(strtok(line, "#"));
+    fgets(buf, sizeof(buf), fp);
+    p->id = cpdbGetStringCopy(strtok(buf, "#"));
 
-    fgets(line, CPDB_BSIZE, fp);
-    p->name = cpdbGetStringCopy(strtok(line, "#"));
+    fgets(buf, sizeof(buf), fp);
+    p->name = cpdbGetStringCopy(strtok(buf, "#"));
 
-    fgets(line, CPDB_BSIZE, fp);
-    p->location = cpdbGetStringCopy(strtok(line, "#"));
+    fgets(buf, sizeof(buf), fp);
+    p->location = cpdbGetStringCopy(strtok(buf, "#"));
 
-    fgets(line, CPDB_BSIZE, fp);
-    p->info = cpdbGetStringCopy(strtok(line, "#"));
+    fgets(buf, sizeof(buf), fp);
+    p->info = cpdbGetStringCopy(strtok(buf, "#"));
 
-    fgets(line, CPDB_BSIZE, fp);
-    p->make_and_model = cpdbGetStringCopy(strtok(line, "#"));
+    fgets(buf, sizeof(buf), fp);
+    p->make_and_model = cpdbGetStringCopy(strtok(buf, "#"));
 
-    fgets(line, CPDB_BSIZE, fp);
-    p->state = cpdbGetStringCopy(strtok(line, "#"));
+    fgets(buf, sizeof(buf), fp);
+    p->state = cpdbGetStringCopy(strtok(buf, "#"));
 
     fscanf(fp, "%d\n", &p->accepting_jobs);
     
@@ -1073,15 +1115,14 @@ cpdb_printer_obj_t *cpdbResurrectPrinterFromFile(const char *filename)
     cpdbDebugLog("Settings: ", CPDB_DEBUG_LEVEL_INFO);
     while (count--)
     {
-        fgets(line, CPDB_BSIZE, fp);
-        name = strtok(line, "#");
+        fgets(buf, sizeof(buf), fp);
+        name = strtok(buf, "#");
         value = strtok(NULL, "#");
         cpdbDebugLog2(name, value, CPDB_DEBUG_LEVEL_INFO);
         cpdbAddSetting(p->settings, name, value);
     }
 
     fclose(fp);
-    free(path);
     return p;
 }
 
@@ -1376,7 +1417,7 @@ cpdb_settings_t *cpdbReadSettingsFromDisk()
     FILE *fp;
     int count;
     char *name, *value, *conf_dir, *path;
-    char line[CPDB_BSIZE];
+    char buf[CPDB_BSIZE];
     cpdb_settings_t *s;
 
     if ((conf_dir = cpdbGetUserConfDir()) == NULL)
@@ -1401,13 +1442,13 @@ cpdb_settings_t *cpdbReadSettingsFromDisk()
     s = cpdbGetNewSettings();
     fscanf(fp, "%d\n", &count);
     
-    sprintf(line, "Retrieved %d settings from disk", count);
-    cpdbDebugLog(line, CPDB_DEBUG_LEVEL_INFO);
+    sprintf(buf, "Retrieved %d settings from disk", count);
+    cpdbDebugLog(buf, CPDB_DEBUG_LEVEL_INFO);
                   
     while (count--)
     {
-        fgets(line, CPDB_BSIZE, fp);
-        name = strtok(line, "#");
+        fgets(buf, sizeof(buf), fp);
+        name = strtok(buf, "#");
         value = strtok(NULL, "#");
         cpdbDebugLog2(name,
                       value,

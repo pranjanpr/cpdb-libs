@@ -64,6 +64,7 @@ struct cpdb_frontend_obj_s
     PrintFrontend *skeleton;
     GDBusConnection *connection;
 
+    int own_id;
     char *bus_name;
     cpdb_event_callback add_cb;
     cpdb_event_callback rem_cb;
@@ -155,9 +156,9 @@ void cpdbUnhideTemporaryPrinters(cpdb_frontend_obj_t *f);
 
 /**
  * Read the file installed by the backend and create a proxy object
- * using the backend service name and object path.
+ * on the connection using the backend service name and object path
  */
-PrintBackend *cpdbCreateBackendFromFile(const char *);
+PrintBackend *cpdbCreateBackendFromFile(GDBusConnection *, const char *);
 
 /**
  * Find the cpdb_printer_obj_t instance with a particular id ans backend name.
