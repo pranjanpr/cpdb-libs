@@ -3,8 +3,9 @@
  
 AC_PREREQ([2.69]) 
 AC_INIT([cpdb-libs], [2.0b1], [https://github.com/OpenPrinting/cpdb-libs/issues], [cpdb-libs], [https://github.com/OpenPrinting/cpdb-libs])
-AM_INIT_AUTOMAKE([-Wall foreign]) 
+AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_SRCDIR([cpdb/cpdb-frontend.h])
+AM_INIT_AUTOMAKE([-Wall foreign])
 
 : ${CFLAGS=""}
 
@@ -21,62 +22,28 @@ PKG_CHECK_MODULES([GIOUNIX],[gio-unix-2.0])
 PKG_CHECK_MODULES([GLIB],[glib-2.0]) 
 
 # Checks for header files. 
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h]) 
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h sys/stat.h]) 
  
 # Checks for typedefs, structures, and compiler characteristics. 
 AC_TYPE_SIZE_T 
  
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([getcwd])
+AC_CHECK_FUNCS([access
+                getcwd
+                mkdir])
 
-default_printers_file="CPD-default-printers"
+# The info directory which will be read by the frontend
+CPDB_BACKEND_INFO_DIR="$datadir/print-backends"
+AC_SUBST([CPDB_BACKEND_INFO_DIR])
 
-AC_ARG_WITH([user-configdir],
-[ AS_HELP_STRING([--with-user-configdir], [Specify the directory for CPD's user config file]) ],
-[
-    AS_MKDIR_P([$withval])
-    AS_CASE(
-        ["$withval"],
-        ["*/"], [
-            AC_DEFINE_UNQUOTED(CPDB_USER_CONFIG_DIR, "$withval"),
-            AC_DEFINE_UNQUOTED(CPDB_USER_DEFAULT_PRINTERS, "$withval$default_printers_file")
-        ],
-        [
-            AC_DEFINE_UNQUOTED(CPDB_USER_CONFIG_DIR, "$withval/"),
-            AC_DEFINE_UNQUOTED(CPDB_USER_DEFAULT_PRINTERS, "$withval/$default_printers_file")
-        ]
-    )
-],
-[
-    config_dir=~/.config/cpdb/
-    AS_MKDIR_P([$config_dir])
-    AC_DEFINE_UNQUOTED(CPDB_USER_CONFIG_DIR, "$config_dir")
-    AC_DEFINE_UNQUOTED(CPDB_USER_DEFAULT_PRINTERS, "$config_dir$default_printers_file")
-])
+# The directory for the backend executables
+CPDB_BACKEND_EXEC_DIR="$libdir/print-backends"
+AC_SUBST([CPDB_BACKEND_EXEC_DIR])
 
-AC_ARG_WITH([system-configdir],
-[ AS_HELP_STRING([--with-system-configdir], [Specify the directory for CPD's system wide config file]) ],
-[
-    AS_MKDIR_P([$withval])
-    AS_CASE(
-        ["$withval"],
-        ["*/"], [
-            AC_DEFINE_UNQUOTED(CPDB_SYSTEM_CONFIG_DIR, "$withval"),
-            AC_DEFINE_UNQUOTED(CPDB_SYSTEM_DEFAULT_PRINTERS, "$withval$default_printers_file")
-        ],
-        [
-            AC_DEFINE_UNQUOTED(CPDB_SYSTEM_CONFIG_DIR, "$withval/"),
-            AC_DEFINE_UNQUOTED(CPDB_SYSTEM_DEFAULT_PRINTERS, "$withval/$default_printers_file")
-        ]
-    )
-],
-[
-    config_dir=/etc/cpdb/
-    AS_MKDIR_P([$config_dir])
-    AC_DEFINE_UNQUOTED(CPDB_SYSTEM_CONFIG_DIR, "$config_dir")
-    AC_DEFINE_UNQUOTED(CPDB_SYSTEM_DEFAULT_PRINTERS, "$config_dir$default_printers_file")
-])
+# The directory for system wide config files
+CPDB_SYSCONFDIR="$sysconfdir"
+AC_SUBST([CPDB_SYSCONFDIR])
 
 AC_CONFIG_FILES([Makefile
                  cpdb/Makefile

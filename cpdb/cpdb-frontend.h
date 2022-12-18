@@ -14,17 +14,17 @@ extern "C"
 #include <dirent.h>
 #include <cpdb/cpdb.h>
 
-#define CPDB_DEBUG_LEVEL_INFO 3
-#define CPDB_DEBUG_LEVEL_WARN 2
-#define CPDB_DEBUG_LEVEL_ERR 1
-
-#define CPDB_DEBUG_LEVEL CPDB_DEBUG_LEVEL_INFO
-
 #define CPDB_DIALOG_BUS_NAME "org.openprinting.PrintFrontend"
 #define CPDB_DIALOG_OBJ_PATH "/"
-#define CPDB_DBUS_DIR "/usr/share/print-backends"
-#define CPDB_BACKEND_PREFIX "org.openprinting.Backend."
-#define CPDB_SETTINGS_FILE "~/.CPD-print-settings"
+#define CPDB_BACKEND_PREFIX  "org.openprinting.Backend."
+
+/* Names of default config files */
+#define CPDB_PRINT_SETTINGS_FILE   "print-settings"
+#define CPDB_DEFAULT_PRINTERS_FILE "default-printers"
+
+/* Environment variables for printing debug info */
+#define CPDB_DEBUG_LEVEL   "CPDB_DEBUG_LEVEL"
+#define CPDB_DEBUG_LOGFILE "CPDB_DEBUG_LOGFILE"
 
 typedef struct cpdb_frontend_obj_s cpdb_frontend_obj_t;
 typedef struct cpdb_printer_obj_s cpdb_printer_obj_t;
@@ -35,6 +35,12 @@ typedef struct cpdb_option_s cpdb_option_t;
 typedef struct cpdb_margin_s cpdb_margin_t;
 typedef struct cpdb_media_s cpdb_media_t;
 typedef struct cpdb_job_s cpdb_job_t;
+
+typedef enum {
+    CPDB_DEBUG_LEVEL_INFO,
+    CPDB_DEBUG_LEVEL_WARN,
+    CPDB_DEBUG_LEVEL_ERR
+} CpdbDebugLevel;
 
 typedef int (*cpdb_event_callback)(cpdb_printer_obj_t *);
 
@@ -58,6 +64,7 @@ struct cpdb_frontend_obj_s
     PrintFrontend *skeleton;
     GDBusConnection *connection;
 
+    int own_id;
     char *bus_name;
     cpdb_event_callback add_cb;
     cpdb_event_callback rem_cb;
@@ -149,9 +156,9 @@ void cpdbUnhideTemporaryPrinters(cpdb_frontend_obj_t *f);
 
 /**
  * Read the file installed by the backend and create a proxy object
- * using the backend service name and object path.
+ * on the connection using the backend service name and object path
  */
-PrintBackend *cpdbCreateBackendFromFile(const char *);
+PrintBackend *cpdbCreateBackendFromFile(GDBusConnection *, const char *);
 
 /**
  * Find the cpdb_printer_obj_t instance with a particular id ans backend name.
@@ -166,7 +173,7 @@ cpdb_printer_obj_t *cpdbFindPrinterObj(cpdb_frontend_obj_t *, const char *printe
  *                          or
  *                          the complete name ("org.openprinting.Backend.CUPS")
  */
-char *cpdbGetDefaultPrinterForBackend(cpdb_frontend_obj_t *, const char *backend_name);
+cpdb_printer_obj_t *cpdbGetDefaultPrinterForBackend(cpdb_frontend_obj_t *, const char *backend_name);
 
 /**
  * Returns a GList of all default printers in given config file
@@ -241,7 +248,7 @@ struct cpdb_printer_obj_s
     char *info;
     char *make_and_model;
     char *state;
-    gboolean cpdbIsAcceptingJobs;
+    gboolean accepting_jobs;
 
     /** The more advanced options we get from the backend **/
     cpdb_options_t *options;
@@ -490,13 +497,13 @@ GVariant *cpdbSerializeToGVariant(cpdb_settings_t *s);
 
 /**
  * Save the settings to disk ,
- * i.e write them to CPDB_SETTINGS_FILE
+ * i.e write them to CPDB_PRINT_SETTINGS_FILE
  */
 void cpdbSaveSettingsToDisk(cpdb_settings_t *s);
 
 /**
  * Reads the serialized settings stored in
- *  CPDB_SETTINGS_FILE and creates a cpdb_settings_t* struct from it
+ *  CPDB_PRINT_SETTINGS_FILE and creates a cpdb_settings_t* struct from it
  *
  * The caller is responsible for freeing the returned cpdb_settings_t*
  */
@@ -587,8 +594,11 @@ void cpdbUnpackJobArray(GVariant *var, int num_jobs, cpdb_job_t *jobs, char *bac
  * ________________________________utility functions__________________________
  */
 
-void CPDB_DEBUG_LOG(const char *msg, const char *error, int msg_level);
-char *cpdbConcat(const char *printer_id, const char *backend_name);
+/**
+ * Prints debug messages
+ */
+void cpdbDebugLog(const char *msg, CpdbDebugLevel msg_lvl);
+void cpdbDebugLog2(const char *msg1, const char *msg2, CpdbDebugLevel msg_lvl);
 /**
  * 'Unpack' (Deserialize) the GVariant returned in cpdbGetAllOptions
  * and fill the cpdb_options_t structure approriately

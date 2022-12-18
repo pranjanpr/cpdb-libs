@@ -49,7 +49,6 @@ int main(int argc, char **argv)
 
 gpointer parse_commands(gpointer user_data)
 {
-    printf("parse_commands\n");
     fflush(stdout);
     char buf[100];
     while (1)
@@ -62,6 +61,11 @@ gpointer parse_commands(gpointer user_data)
             cpdbDisconnectFromDBus(f);
             g_message("Stopping front end..\n");
             exit(0);
+        }
+        else if (strcmp(buf, "restart") == 0)
+        {
+            cpdbDisconnectFromDBus(f);
+            cpdbConnectToDBus(f);
         }
         else if (strcmp(buf, "refresh") == 0)
         {
@@ -189,7 +193,10 @@ gpointer parse_commands(gpointer user_data)
         else if (strcmp(buf, "get-default-printer") == 0)
         {
             cpdb_printer_obj_t *p = cpdbGetDefaultPrinter(f);
-            printf("%s#%s\n", p->name, p->backend_name);
+            if (p)
+                printf("%s#%s\n", p->name, p->backend_name);
+            else
+                printf("No default printer found\n");
         }
         else if (strcmp(buf, "get-default-printer-for-backend") == 0)
         {
@@ -199,7 +206,8 @@ gpointer parse_commands(gpointer user_data)
              * Backend name = The last part of the backend dbus service
              * Eg. "CUPS" or "GCP"
              */
-            printf("%s\n", cpdbGetDefaultPrinterForBackend(f, backend_name));
+            cpdb_printer_obj_t *p = cpdbGetDefaultPrinterForBackend(f, backend_name);
+            printf("%s\n", p->name);
         }
         else if (strcmp(buf, "set-user-default-printer") == 0)
         {
@@ -362,7 +370,7 @@ void display_help()
     printf("%s\n", "hide-temporary");
     printf("%s\n", "unhide-temporary");
     //printf("%s\n", "ping <printer id> ");
-    printf("%s\n", "get-default-printer <backend name>");
+    printf("%s\n", "get-default-printer");
     printf("%s\n", "get-default-printer-for-backend <backend name>");
     printf("%s\n", "set-user-default-printer <printer id> <backend name>");
     printf("%s\n", "set-system-default-printer <printer id> <backend name>");
