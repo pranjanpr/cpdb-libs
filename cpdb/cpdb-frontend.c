@@ -23,11 +23,38 @@ cpdb_frontend_obj_t *cpdbGetNewFrontendObj(char *instance_name,
     f->add_cb = add_cb;
     f->rem_cb = rem_cb;
     f->num_backends = 0;
-    f->backend = g_hash_table_new(g_str_hash, g_str_equal);
+    f->backend = g_hash_table_new_full(g_str_hash,
+                                       g_str_equal,
+                                       free,
+                                       g_object_unref);
     f->num_printers = 0;
-    f->printer = g_hash_table_new(g_str_hash, g_str_equal);
+    f->printer = g_hash_table_new_full(g_str_hash,
+                                       g_str_equal,
+                                       free,
+                                       (GDestroyNotify) cpdbDeletePrinterObj);
     f->last_saved_settings = cpdbReadSettingsFromDisk();
     return f;
+}
+
+void cpdbDeleteFrontendObj(cpdb_frontend_obj_t *f)
+{
+    if (f == NULL)
+        return;
+    
+    cpdbDisconnectFromDBus(f);
+
+    if (f->skeleton)
+        g_object_unref(f->skeleton);
+    if (f->bus_name)
+        free(f->bus_name);
+    if (f->backend)
+        g_hash_table_destroy(f->backend);
+    if (f->printer)
+        g_hash_table_destroy(f->printer);
+    if (f->last_saved_settings)
+        cpdbDeleteSettings(f->last_saved_settings);
+    
+    free(f);
 }
 
 static void on_printer_added(GDBusConnection *connection,
@@ -169,6 +196,9 @@ void cpdbConnectToDBus(cpdb_frontend_obj_t *f)
 
 void cpdbDisconnectFromDBus(cpdb_frontend_obj_t *f)
 {
+    if (f->connection == NULL || g_dbus_connection_is_closed(f->connection))
+        return;
+    
     print_frontend_emit_stop_listing(f->skeleton);
     g_dbus_connection_flush_sync(f->connection, NULL, NULL);
     
@@ -272,6 +302,7 @@ gboolean cpdbAddPrinter(cpdb_frontend_obj_t *f,
                       CPDB_DEBUG_LEVEL_ERR);
         return FALSE;
     }
+    g_object_ref(p->backend_proxy);
 
     g_hash_table_insert(f->printer, cpdbConcatSep(p->id, p->backend_name), p);
     f->num_printers++;
@@ -298,20 +329,17 @@ cpdb_printer_obj_t *cpdbRemovePrinter(cpdb_frontend_obj_t *f,
     return p;
 }
 
-void
-cpdbRefreshPrinterList(cpdb_frontend_obj_t *f)
+void cpdbRefreshPrinterList(cpdb_frontend_obj_t *f)
 {
     print_frontend_emit_refresh_backend(f->skeleton);
 }
 
-void
-cpdbHideRemotePrinters(cpdb_frontend_obj_t *f)
+void cpdbHideRemotePrinters(cpdb_frontend_obj_t *f)
 {
     print_frontend_emit_hide_remote_printers(f->skeleton);
 }
 
-void
-cpdbUnhideRemotePrinters(cpdb_frontend_obj_t *f)
+void cpdbUnhideRemotePrinters(cpdb_frontend_obj_t *f)
 {
     print_frontend_emit_unhide_remote_printers(f->skeleton);
 }
@@ -657,6 +685,24 @@ cpdb_printer_obj_t *cpdbGetNewPrinterObj()
     p->options = NULL;
     p->settings = cpdbGetNewSettings();
     return p;
+}
+
+void cpdbDeletePrinterObj(cpdb_printer_obj_t *p)
+{
+    if (p == NULL)
+        return;
+    
+    if (p->backend_name)
+        free(p->backend_name);
+    if (p->backend_proxy)
+        g_object_unref(p->backend_proxy);
+    if (p->options)
+        cpdbDeleteOptions(p->options);
+
+    if (p->settings)
+        cpdbDeleteSettings(p->settings);
+    
+    free(p);
 }
 
 void cpdbFillBasicOptions(cpdb_printer_obj_t *p,
@@ -1277,7 +1323,7 @@ cpdb_settings_t *cpdbGetNewSettings()
 {
     cpdb_settings_t *s = g_new0(cpdb_settings_t, 1);
     s->count = 0;
-    s->table = g_hash_table_new(g_str_hash, g_str_equal);
+    s->table = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
     return s;
 }
 
@@ -1464,12 +1510,13 @@ cpdb_settings_t *cpdbReadSettingsFromDisk()
 
 void cpdbDeleteSettings(cpdb_settings_t *s)
 {
-    if (s)
-    {
-        GHashTable *h = s->table;
-        free(s);
-        g_hash_table_destroy(h);
-    }
+    if (s == NULL)
+        return;
+    
+    if (s->table)
+        g_hash_table_destroy(s->table);
+    
+    free(s);
 }
 /**
 ________________________________________________ cpdb_options_t __________________________________________
@@ -1478,9 +1525,28 @@ cpdb_options_t *cpdbGetNewOptions()
 {
     cpdb_options_t *o = g_new0(cpdb_options_t, 1);
     o->count = 0;
-    o->table = g_hash_table_new(g_str_hash, g_str_equal);
-    o->media = g_hash_table_new(g_str_hash, g_str_equal);
+    o->table = g_hash_table_new_full(g_str_hash,
+                                     g_str_equal,
+                                     NULL,
+                                     (GDestroyNotify) cpdbDeleteOption);
+    o->media = g_hash_table_new_full(g_str_hash,
+                                     g_str_equal,
+                                     NULL,
+                                     (GDestroyNotify) cpdbDeleteMedia);
     return o;
+}
+
+void cpdbDeleteOptions(cpdb_options_t *opts)
+{
+    if (opts == NULL)
+        return;
+    
+    if (opts->table)
+        g_hash_table_destroy(opts->table);
+    if (opts->media)
+        g_hash_table_destroy(opts->media);
+
+    free(opts);
 }
 
 /**************cpdb_option_t************************************/
@@ -1494,6 +1560,53 @@ void cpdbPrintOption(const cpdb_option_t *opt)
         printf("   * %s\n", opt->supported_values[i]);
     }
     printf(" --> DEFAULT: %s\n\n", opt->default_value);
+}
+
+void cpdbDeleteOption(cpdb_option_t *opt)
+{
+    if (opt == NULL)
+        return;
+    
+    if (opt->option_name)
+        free(opt->option_name);
+    if (opt->supported_values)
+        free(opt->supported_values);
+    if (opt->default_value)
+        free(opt->default_value);
+
+    free(opt);
+}
+
+/**************cpdb_option_t************************************/
+void cpdbPrintMedia(cpdb_media_t *media)
+{
+    printf("[+] Media: %s\n", media->name);
+    printf("   * width = %d\n", media->width);
+    printf("   * length = %d\n", media->length);
+    printf(" --> Supported margins: %d\n", media->num_margins);
+    printf("       left, right, top, bottom\n");
+    for (int i = 0; i < media->num_margins; i++)
+    {
+        printf("     * %d, %d, %d, %d,\n",
+               media->margins[i].left,
+               media->margins[i].right,
+               media->margins[i].top,
+               media->margins[i].bottom);
+    }
+    printf("\n");
+}
+
+void cpdbDeleteMedia(cpdb_media_t *media)
+{
+    if (media == NULL)
+        return;
+    
+    if (media->name)
+        free(media->name);
+    if (media->margins)
+        free(media->margins);
+    
+    free(media);
 }
 
 /**

@@ -14,6 +14,9 @@ If one opens the print dialog, the dialog will not talk directly to CUPS, a clou
 
  - GLIB 2.0:
    `sudo apt install libglib2.0-dev`
+   
+ - LIBDBUS:
+   `sudo apt install libdbus-1-dev`
 
  - LIBTOOL:
    `sudo apt install libtool`

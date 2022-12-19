@@ -18,6 +18,7 @@ static int add_printer_callback(cpdb_printer_obj_t *p)
 static int remove_printer_callback(cpdb_printer_obj_t *p)
 {
     g_message("Removed Printer %s : %s!\n", p->name, p->backend_name);
+    cpdbDeletePrinterObj(p);
 }
 
 static void acquire_details_callback(cpdb_printer_obj_t *p, int success, void *user_data)
@@ -58,7 +59,7 @@ gpointer parse_commands(gpointer user_data)
         scanf("%s", buf);
         if (strcmp(buf, "stop") == 0)
         {
-            cpdbDisconnectFromDBus(f);
+            cpdbDeleteFrontendObj(f);
             g_message("Stopping front end..\n");
             exit(0);
         }
@@ -113,6 +114,29 @@ gpointer parse_commands(gpointer user_data)
             while (g_hash_table_iter_next(&iter, NULL, &value))
             {
                 cpdbPrintOption(value);
+            }
+        }
+        else if (strcmp(buf, "get-all-media") == 0)
+        {
+            char printer_id[100];
+            char backend_name[100];
+            scanf("%s%s", printer_id, backend_name);
+            g_message("Getting all attributes ..\n");
+            cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
+
+            if(p == NULL)
+              continue;
+
+            cpdb_options_t *opts = cpdbGetAllOptions(p);
+
+            printf("Retrieved %d medias.\n", opts->media_count);
+            GHashTableIter iter;
+            gpointer value;
+
+            g_hash_table_iter_init(&iter, opts->media);
+            while (g_hash_table_iter_next(&iter, NULL, &value))
+            {
+                cpdbPrintMedia(value);
             }
         }
         else if (strcmp(buf, "get-default") == 0)
