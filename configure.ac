@@ -29,9 +29,7 @@ AC_TYPE_SIZE_T
  
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([access
-                getcwd
-                mkdir])
+AC_CHECK_FUNCS([access getcwd mkdir])
 
 # The info directory which will be read by the frontend
 CPDB_BACKEND_INFO_DIR="$datadir/print-backends"

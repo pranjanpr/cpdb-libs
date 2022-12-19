@@ -91,6 +91,7 @@ struct cpdb_frontend_obj_s
  *
  */
 cpdb_frontend_obj_t *cpdbGetNewFrontendObj(char *instance_name, cpdb_event_callback add_cb, cpdb_event_callback remove_cb);
+void cpdbDeleteFrontendObj(cpdb_frontend_obj_t *f);
 
 /**
  * Start the frontend D-Bus Service
@@ -260,6 +261,11 @@ struct cpdb_printer_obj_s
 cpdb_printer_obj_t *cpdbGetNewPrinterObj();
 
 /**
+ * Frees up memory
+ */
+void cpdbDeletePrinterObj(cpdb_printer_obj_t *p);
+
+/**
  * Fill the basic options of cpdb_printer_obj_t from the GVariant returned with the printerAdded signal
  */
 void cpdbFillBasicOptions(cpdb_printer_obj_t *, GVariant *);
@@ -268,6 +274,7 @@ void cpdbFillBasicOptions(cpdb_printer_obj_t *, GVariant *);
  * Print the basic options of cpdb_printer_obj_t
  */
 void cpdbPrintBasicOptions(cpdb_printer_obj_t *);
+
 gboolean cpdbIsAcceptingJobs(cpdb_printer_obj_t *);
 char *cpdbGetState(cpdb_printer_obj_t *);
 
@@ -509,6 +516,9 @@ void cpdbSaveSettingsToDisk(cpdb_settings_t *s);
  */
 cpdb_settings_t *cpdbReadSettingsFromDisk();
 
+/**
+ * Frees up memory
+ */
 void cpdbDeleteSettings(cpdb_settings_t *);
 
 /************************************************************************************************/
@@ -529,6 +539,11 @@ struct cpdb_options_s
  */
 cpdb_options_t *cpdbGetNewOptions();
 
+/**
+ * Frees up memory 
+ */
+void cpdbDeleteOptions(cpdb_options_t *);
+
 /************************************************************************************************/
 /**
 ______________________________________ cpdb_option_t __________________________________________
@@ -536,12 +551,14 @@ ______________________________________ cpdb_option_t ___________________________
 **/
 struct cpdb_option_s
 {
-    const char *option_name;
+    char *option_name;
     int num_supported;
     char **supported_values;
     char *default_value;
 };
 void cpdbPrintOption(const cpdb_option_t *opt);
+
+void cpdbDeleteOption(cpdb_option_t *);
 
 /************************************************************************************************/
 
@@ -566,12 +583,15 @@ ______________________________________ cpdb_media_t ____________________________
 
 struct cpdb_media_s
 {
-    const char *name;
+    char *name;
     int width;
     int length;
     int num_margins;
     cpdb_margin_t *margins;
 };
+
+void cpdbPrintMedia(cpdb_media_t *);
+void cpdbDeleteMedia(cpdb_media_t *);
 
 /************************************************************************************************/
 /**
