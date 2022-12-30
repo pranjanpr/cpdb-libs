@@ -11,6 +11,11 @@ autoscan.log
 aclocal.m4
 autom4te.cache
 build-aux/
+m4/*
+!m4/cpdb*
+po/*
+!po/POTFILE.in
+!po/Makevars
 config.*
 configure
 libtool
