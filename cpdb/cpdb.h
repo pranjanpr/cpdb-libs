@@ -31,6 +31,9 @@ extern "C" {
 #define CPDB_DEBUG_LEVEL   "CPDB_DEBUG_LEVEL"
 #define CPDB_DEBUG_LOGFILE "CPDB_DEBUG_LOGFILE"
 
+#define CPDB_PRINTER_ARRAY_ARGS "a(sssssbss)"
+#define CPDB_PRINTER_ARGS "(sssssbss)"
+
 #define CPDB_PRINTER_ADDED_ARGS "(sssssbss)"
 #define CPDB_JOB_ARGS "(ssssssi)"
 #define CPDB_JOB_ARRAY_ARGS "a(ssssssi)"
@@ -49,32 +52,69 @@ typedef enum {
  */
 void cpdbInit();
 
-/* Convert string to gboolean */
+/**
+ * Convert string to gboolean.
+ */
 gboolean cpdbGetBoolean(const char *);
-/* Concatenate two strings */
+
+/**
+ * Concatenate two strings.
+ */
 char *cpdbConcat(const char *s1, const char *s2);
-/* Concatenate two strings with separator "#" */
+
+/**
+ * Concatenate two strings with separator "#".
+ */
 char *cpdbConcatSep(const char *s1, const char *s2);
-/* Concatenate two paths */
+
+/**
+ * Concatenate two paths.
+ */
 char *cpdbConcatPath(const char *s1, const char *s2);
-/* Get string copy */
+
+/**
+ * Get string copy.
+ */
 char *cpdbGetStringCopy(const char *s);
-/* Get directory for user configuration files */
+
+/**
+ * Get directory for user configuration files.
+ */
 char *cpdbGetUserConfDir();
-/* Get directory for system wide configuration files */
+
+/**
+ * Get directory for system wide configuration files.
+ */
 char *cpdbGetSysConfDir();
-/* Get absolute path from relative path */
+
+/**
+ * Get absolute path from relative path.
+ */
 char *cpdbGetAbsolutePath(const char *file_path);
-/* Extract file name for path */
+
+/**
+ * Extract file name for path.
+ */
 char *cpdbExtractFileName(const char* file_path);
-/* Get a group for given option name */
+
+/**
+ * Get a group for given option name.
+ */
 char *cpdbGetGroup(const char *option_name);
-/* Get translation for given group name */
+
+/**
+ * Get translation for given group name.
+ */
 char *cpdbGetGroupTranslation2(const char *group_name, const char *locale);
 
-/* Format and print debug message for frontend */
+/**
+ * Format and print debug message for frontend.
+ */
 void cpdbFDebugPrintf(CpdbDebugLevel msg_lvl, const char *fmt, ...);
-/* Format and print debug message for backends */
+
+/**
+ * Format and print debug message for backends.
+ */
 void cpdbBDebugPrintf(CpdbDebugLevel msg_lvl, const char *backend_name, const char *fmt, ...);
 
 /* Packing/Unpacking utility functions */
@@ -192,14 +232,15 @@ GVariant *cpdbPackMediaArray(int num_val, int (*margins)[4]);
 #define CPDB_STATE_PRINTING             N_("printing")
 #define CPDB_STATE_STOPPED              N_("stopped")
 
-#define CPDB_SIGNAL_STOP_BACKEND N_("StopListing")
-#define CPDB_SIGNAL_REFRESH_BACKEND N_("RefreshBackend")
-#define CPDB_SIGNAL_PRINTER_ADDED N_("PrinterAdded")
-#define CPDB_SIGNAL_PRINTER_REMOVED N_("PrinterRemoved")
-#define CPDB_SIGNAL_HIDE_REMOTE N_("HideRemotePrinters")
-#define CPDB_SIGNAL_UNHIDE_REMOTE N_("UnhideRemotePrinters")
-#define CPDB_SIGNAL_HIDE_TEMP N_("HideTemporaryPrinters")
-#define CPDB_SIGNAL_UNHIDE_TEMP N_("UnhideTemporaryPrinters")
+#define CPDB_SIGNAL_STOP_BACKEND "StopListing"
+#define CPDB_SIGNAL_REFRESH_BACKEND "RefreshBackend"
+#define CPDB_SIGNAL_PRINTER_ADDED "PrinterAdded"
+#define CPDB_SIGNAL_PRINTER_STATE_CHANGED "PrinterStateChanged"
+#define CPDB_SIGNAL_PRINTER_REMOVED "PrinterRemoved"
+#define CPDB_SIGNAL_HIDE_REMOTE "HideRemotePrinters"
+#define CPDB_SIGNAL_UNHIDE_REMOTE "UnhideRemotePrinters"
+#define CPDB_SIGNAL_HIDE_TEMP "HideTemporaryPrinters"
+#define CPDB_SIGNAL_UNHIDE_TEMP "UnhideTemporaryPrinters"
 
 #define CPDB_JOB_STATE_ABORTED N_("Aborted")
 #define CPDB_JOB_STATE_CANCELLED N_("Cancelled")
