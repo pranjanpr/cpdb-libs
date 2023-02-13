@@ -1,4 +1,57 @@
-# CHANGES - Common Print Dialog Backends - Libraries - v2.0b1 - 2022-12-11
+# CHANGES - Common Print Dialog Backends - Libraries - v2.0b2 - 2023-02-13
+
+## CHANGES IN V2.0b2 (13th February 2023)
+
+- Options groups: To allow better structuring of options in print
+  dialogs, common options are categorized in groups, like media, print
+  quality, color, finishing, ... This can be primarily done by the
+  backends but the frontend library can do fallback/default
+  assignments for options not assigned by the backend.
+
+- Many print dialogs have a "Color" option group (usually shown on one
+  tab), so also have one in cpdb-libs to match with the dialogs and
+  more easily map the options into the dialogs.
+
+- Add macros for new options and choices, also add "Color" group
+
+- Synchronous printer fetching upon backend activation (PR #21) Made
+  `cpdbConnectToDbus()` wait until all backends activate
+
+- Backends will automatically signal any printer updates instead of
+  the frontend having to manually ask them (PR #21)
+
+- Add `printer-state-changed` signal (PR #21)
+  * Changed function callback type definition for printer updates
+  * Added callback to frontends for changes in printer state
+
+- Translation support: Translations of option, choice, and group names
+  are now supported, not only English human-readable strings. And
+  Translations can be provided by the backends (also polling them from
+  the print service) and by the frontend library.
+
+- Use autopoint instead of gettextize
+
+- Enable reconnecting to dbus (PR #14)
+
+- Debug logging: Now backends forward their log messages to the
+  frontend library for easier debugging.
+
+- Use <glib/gi18n.h> instead of redefining macros (Issue #20)
+
+- Add functions to free objects (PR #15)
+
+- Remove hardcoded paths and follow XDG base dir specs (PR #14)
+
+- Added javadoc comments to function declarations (PR #21)
+
+- Build system: Let "make dist" also create .tar.bz2 and .tar.xz
+
+- Add the dependency on libdbus to README.md
+  libdbus-1-dev is needed to configure pkg-config variables for
+  backends
+
+- COPYING: Added Priydarshi Singh
+
 
 ## CHANGES IN V2.0b1 (11th December 2022)
 
