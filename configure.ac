@@ -10,7 +10,7 @@ AC_CONFIG_SRCDIR([cpdb/cpdb-frontend.h])
 
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([-Wall foreign])
+AM_INIT_AUTOMAKE([-Wall dist-xz dist-bzip2 foreign])
 
 # Check for archiver
 AM_PROG_AR
