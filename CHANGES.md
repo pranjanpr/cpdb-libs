@@ -1,4 +1,15 @@
-# CHANGES - Common Print Dialog Backends - Libraries - v2.0b2 - 2023-02-13
+# CHANGES - Common Print Dialog Backends - Libraries - v2.0b3 - 2023-02-20
+
+## CHANGES IN V2.0b3 (20th February 2023)
+
+- Added functions to fetch all printer strings translations (PR #23)
+  * Added `cpdbGetAllTranslations()` to synchronously fetch all
+    printer string translations
+  * Added `cpdbAcquireTranslations()` to asychronously fetch them.
+  * Removed `get-human-readable-option`/`choice-name` methods
+  * Removed `cpdb_async_obj_t` from `cpdb-frontend.h` as that is meant
+    for internal use.
+
 
 ## CHANGES IN V2.0b2 (13th February 2023)
 
