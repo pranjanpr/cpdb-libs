@@ -1260,7 +1260,7 @@ cpdb_printer_obj_t *cpdbResurrectPrinterFromFile(const char *filename)
     if ((fp = fopen(path, "r")) == NULL)
     {
         logerror("Error resurrecting printer : Couldn't open %s for reading\n",
-                    p->id, p->backend_name, path);
+		 path);
         goto failed;
     }
 
