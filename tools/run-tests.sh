@@ -20,13 +20,13 @@ trap cleanup 0 EXIT INT QUIT ABRT PIPE TERM
 rm -f $LOG
 touch $LOG
 
-# Run the test fromtend with a session D-Bus and feed in commands.
+# Run the test frontend with a session D-Bus and feed in commands.
 ( \
   sleep 1; \
   echo stop \
 ) | dbus-run-session -- $FRONTEND > $LOG 2>&1 &
 
-# Give the frontned a maximum of 5 seconds to run and then kill it, to avoid
+# Give the frontend a maximum of 5 seconds to run and then kill it, to avoid
 # the script getting stuck if stopping it fails.
 i=0
 FRONTEND_PID=$!
