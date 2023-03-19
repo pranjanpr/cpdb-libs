@@ -338,15 +338,18 @@ static void cpdbActivateBackends(cpdb_frontend_obj_t *f)
 {
     DIR *d;
     int len;
+    const char *info_dir_name;
     struct dirent *dir;
     PrintBackend *proxy;
     char *backend_suffix;
-    
+
     logdebug("Activating backends\n");
-    if ((d = opendir(CPDB_BACKEND_INFO_DIR)) == NULL)
+    if ((info_dir_name = getenv("CPDB_BACKEND_INFO_DIR")) == NULL)
+      info_dir_name = CPDB_BACKEND_INFO_DIR;
+    if ((d = opendir(info_dir_name)) == NULL)
     {
         logerror("Couldn't open backend info directory : %s\n",
-                    CPDB_BACKEND_INFO_DIR);
+		 info_dir_name);
         return;
     }
     len = strlen(CPDB_BACKEND_PREFIX);
@@ -373,10 +376,13 @@ PrintBackend *cpdbCreateBackendFromFile(GDBusConnection *connection,
     PrintBackend *proxy;
     GError *error = NULL;
     char *path, *backend_name;
+    const char *info_dir_name;
     char obj_path[CPDB_BSIZE];
     
     backend_name = cpdbGetStringCopy(backend_file_name);
-    path = cpdbConcatPath(CPDB_BACKEND_INFO_DIR, backend_file_name);
+    if ((info_dir_name = getenv("CPDB_BACKEND_INFO_DIR")) == NULL)
+      info_dir_name = CPDB_BACKEND_INFO_DIR;
+    path = cpdbConcatPath(info_dir_name, backend_file_name);
     
     if ((file = fopen(path, "r")) == NULL)
     {
