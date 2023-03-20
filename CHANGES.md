@@ -1,4 +1,36 @@
-# CHANGES - Common Print Dialog Backends - Libraries - v2.0b3 - 2023-02-20
+# CHANGES - Common Print Dialog Backends - Libraries - v2.0b4 - 2023-03-20
+
+## CHANGES IN V2.0b4 (20th March 2023)
+
+ - Added test script for `make test`/`make check`
+   The script tools/run-tests.sh runs the `cpdb-text-frontend` text mode
+   example frontend and stops it by supplying "stop" to its standard
+   input.
+
+ - Allow changing the backend info directory via env variable
+   To make it possible to test backends which are not installed into
+   the system, one can now set the environment variable
+   CPDB_BACKEND_INFO_DIR to the directory where the backend info file
+   for the backend is, for example in its source tree.
+
+ - Install sample frontend with `make install`
+   We use the sample frontend `cpdb-text-frontend` for several tests now,
+   especially "make check" and also the autopkgtests in the
+   Debian/Ubuntu packages. They are also useful for backend developers
+   for manual testing.
+
+ - Renamed develping/debug tools
+   As we install the development and debugging tools now, they should
+   be more easily identifiable as part of CPDB. Therefore they get
+   `cpdb-`-prefixed names.
+
+ - `cpdb-text-frontend`: Use larger and more easily adjustable string
+   buffers
+
+ - Fixed segfault in the frontend library
+   `cpdbResurrectPrinterFromFile()`, when called with an invalid file
+   name, caused a crash.
+
 
 ## CHANGES IN V2.0b3 (20th February 2023)
 
