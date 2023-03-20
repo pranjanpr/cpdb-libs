@@ -8,6 +8,8 @@
 
 #include <cpdb/frontend.h>
 
+#define BUFSIZE 1024
+
 void display_help();
 gpointer parse_commands(gpointer user_data);
 cpdb_frontend_obj_t *f;
@@ -152,7 +154,7 @@ int main(int argc, char **argv)
 gpointer parse_commands(gpointer user_data)
 {
     fflush(stdout);
-    char buf[100];
+    char buf[BUFSIZE];
     while (1)
     {
         printf("> ");
@@ -191,8 +193,8 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-all-options") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             g_message("Getting all attributes ..\n");
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
@@ -214,8 +216,8 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-all-media") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             g_message("Getting all attributes ..\n");
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
@@ -237,7 +239,7 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-default") == 0)
         {
-            char printer_id[100], backend_name[100], option_name[100];
+            char printer_id[BUFSIZE], backend_name[BUFSIZE], option_name[BUFSIZE];
             scanf("%s%s%s", option_name, printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             char *ans = cpdbGetDefault(p, option_name);
@@ -248,7 +250,7 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-setting") == 0)
         {
-            char printer_id[100], backend_name[100], setting_name[100];
+            char printer_id[BUFSIZE], backend_name[BUFSIZE], setting_name[BUFSIZE];
             scanf("%s%s%s", setting_name, printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             char *ans = cpdbGetSetting(p, setting_name);
@@ -259,7 +261,7 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-current") == 0)
         {
-            char printer_id[100], backend_name[100], option_name[100];
+            char printer_id[BUFSIZE], backend_name[BUFSIZE], option_name[BUFSIZE];
             scanf("%s%s%s", option_name, printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             char *ans = cpdbGetCurrent(p, option_name);
@@ -270,7 +272,7 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "add-setting") == 0)
         {
-            char printer_id[100], backend_name[100], option_name[100], option_val[100];
+            char printer_id[BUFSIZE], backend_name[BUFSIZE], option_name[BUFSIZE], option_val[BUFSIZE];
             scanf("%s %s %s %s", option_name, option_val, printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             printf("%s : %s\n", option_name, option_val);
@@ -278,23 +280,23 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "clear-setting") == 0)
         {
-            char printer_id[100], backend_name[100], option_name[100];
+            char printer_id[BUFSIZE], backend_name[BUFSIZE], option_name[BUFSIZE];
             scanf("%s%s%s", option_name, printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             cpdbClearSettingFromPrinter(p, option_name);
         }
         else if (strcmp(buf, "get-state") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             printf("%s\n", cpdbGetState(p));
         }
         else if (strcmp(buf, "is-accepting-jobs") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             printf("Accepting jobs ? : %d \n", cpdbIsAcceptingJobs(p));
@@ -305,7 +307,7 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "ping") == 0)
         {
-            char printer_id[100], backend_name[100];
+            char printer_id[BUFSIZE], backend_name[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             print_backend_call_ping_sync(p->backend_proxy, p->id, NULL, NULL);
@@ -320,7 +322,7 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-default-printer-for-backend") == 0)
         {
-            char backend_name[100];
+            char backend_name[BUFSIZE];
             scanf("%s", backend_name);
             /**
              * Backend name = The last part of the backend dbus service
@@ -331,8 +333,8 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "set-user-default-printer") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             if (p)
@@ -345,8 +347,8 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "set-system-default-printer") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             if (p)
@@ -359,7 +361,7 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "print-file") == 0)
         {
-            char printer_id[100], backend_name[100], file_path[200];
+            char printer_id[BUFSIZE], backend_name[BUFSIZE], file_path[BUFSIZE];
             scanf("%s%s%s", file_path, printer_id, backend_name);
             /**
              * Try adding some settings here .. change them and experiment
@@ -368,7 +370,7 @@ gpointer parse_commands(gpointer user_data)
 
             if(strcmp(backend_name, "FILE") == 0)
             {
-              char final_file_path[200];
+              char final_file_path[BUFSIZE];
               printf("Please give the final file path: ");
               scanf("%s", final_file_path);
               cpdbPrintFilePath(p, file_path, final_file_path);
@@ -380,8 +382,8 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-active-jobs-count") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             printf("%d jobs currently active.\n", cpdbGetActiveJobsCount(p));
@@ -401,9 +403,9 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "cancel-job") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
-            char job_id[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
+            char job_id[BUFSIZE];
             scanf("%s%s%s", job_id, printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             if (cpdbCancelJob(p, job_id))
@@ -413,45 +415,45 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "pickle-printer") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
-            char job_id[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
+            char job_id[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             cpdbPicklePrinterToFile(p, "/tmp/.printer-pickle", f);
         }
         else if (strcmp(buf, "get-option-translation") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
-            char option_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
+            char option_name[BUFSIZE];
             scanf("%s%s%s", option_name, printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             printf("%s\n", cpdbGetOptionTranslation(p, option_name, locale));
         }
         else if (strcmp(buf, "get-choice-translation") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
-            char option_name[100];
-            char choice_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
+            char option_name[BUFSIZE];
+            char choice_name[BUFSIZE];
             scanf("%s%s%s%s", option_name, choice_name, printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             printf("%s\n", cpdbGetChoiceTranslation(p, option_name, choice_name, locale));
         }
         else if (strcmp(buf, "get-group-translation") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
-            char group_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
+            char group_name[BUFSIZE];
             scanf("%s%s%s", group_name, printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             printf("%s\n", cpdbGetGroupTranslation(p, group_name, locale));
         }
         else if (strcmp(buf, "get-all-translations") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
             cpdbGetAllTranslations(p, locale);
@@ -459,9 +461,9 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-media-size") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
-            char media[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
+            char media[BUFSIZE];
             int width, length;
             scanf("%s%s%s", media, printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
@@ -471,9 +473,9 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "get-media-margins") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
-            char media[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
+            char media[BUFSIZE];
             scanf("%s%s%s", media, printer_id, backend_name);
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
 
@@ -484,8 +486,8 @@ gpointer parse_commands(gpointer user_data)
         }
         else if (strcmp(buf, "acquire-details") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
@@ -497,8 +499,8 @@ gpointer parse_commands(gpointer user_data)
 		}
         else if (strcmp(buf, "acquire-translations") == 0)
         {
-            char printer_id[100];
-            char backend_name[100];
+            char printer_id[BUFSIZE];
+            char backend_name[BUFSIZE];
             scanf("%s%s", printer_id, backend_name);
             
             cpdb_printer_obj_t *p = cpdbFindPrinterObj(f, printer_id, backend_name);
