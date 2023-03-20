@@ -36,11 +36,11 @@ Also install at least one of the backends (cpdb-backend-...).
 
 The project also includes a sample command line frontend (using the `cpdb-libs-frontend` API) that you can use to test whether the installed libraries and print backends work as expected.
 
-    $ print_frontend
+    $ cpdb-text-frontend
 
 The list of printers from various print technologies should start appearing automatically. Type `help` to get the list of available commands. Make sure to stop the frontend using the `stop` command only.
 
-The library also provides support for serializing a printer. Use the `pickle-printer` command to serialize it, and run the `pickle_test` executable after that to deserialize and test it.
+The library also provides support for serializing a printer. Use the `pickle-printer` command to serialize it, and run the `cpdb-pickle-print` executable after that to deserialize and test it.
 
 
 ## Using the libraries for developing print backends and dialogs.

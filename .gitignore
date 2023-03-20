@@ -41,8 +41,8 @@ cpdb/*.la
 cpdb/*.lo
 cpdb/.deps
 cpdb/.libs
-tools/print_frontend
-tools/pickle_test
+tools/cpdb-text-frontend
+tools/cpdb-pickle-print
 tools/gmon.out
 tools/*.o
 tools/.deps

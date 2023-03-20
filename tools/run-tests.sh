@@ -3,7 +3,7 @@
 set -e -u
 
 LOG=run-tests.log
-FRONTEND=./print_frontend
+FRONTEND=./cpdb-text-frontend
 
 export LD_LIBRARY_PATH=`pwd`/cpdb/.libs
 

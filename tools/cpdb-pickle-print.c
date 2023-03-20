@@ -13,7 +13,7 @@ int main(int argc, char **argv)
     {
         printf("No serialized printer found. "
                "You must first 'pickle' a printer using the "
-               "'pickle-printer' command inside print_frontend\n");
+               "'pickle-printer' command inside cpdb-text-frontend\n");
         exit(EXIT_FAILURE);
     }
     cpdbPrintFile(p, argv[1]);
