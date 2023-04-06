@@ -28,11 +28,6 @@ cpdb_pickle_print_CFLAGS = \
 # Tests ("make test"/"make check")
 # ================================
 
-TESTdir = .
-
-TEST_SCRIPTS = \
-        run-tests.sh
-
 TESTS = \
         run-tests.sh
 
