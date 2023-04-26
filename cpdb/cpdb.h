@@ -43,7 +43,6 @@ extern "C" {
 #define CPDB_PRINTER_ADDED_ARGS "(sssssbss)"
 #define CPDB_JOB_ARGS "(ssssssi)"
 #define CPDB_JOB_ARRAY_ARGS "a(ssssssi)"
-#define cpdbNewCStringArray(x) ((char **)(malloc(sizeof(char *) * x)))
 
 typedef enum {
     CPDB_DEBUG_LEVEL_DEBUG,
@@ -57,6 +56,11 @@ typedef enum {
  * It’s the responsibility of the main program to set the locale.
  */
 void cpdbInit();
+
+/**
+ * Get an array of C styled strings (char *)
+ */
+char **cpdbNewCStringArray(int num_elems);
 
 /**
  * Convert string to gboolean.
@@ -218,8 +222,8 @@ GVariant *cpdbPackMediaArray(int num_val, int (*margins)[4]);
 #define CPDB_QUALITY_HIGH               N_("high")
 
 #define CPDB_SIDES_ONE_SIDED            N_("one-sided")
-#define CPDB_SIDES_TWO_SIDED_SHORT      N_("two-sided-short")
-#define CPDB_SIDES_TWO_SIDED_LONG       N_("two-sided-long")
+#define CPDB_SIDES_TWO_SIDED_SHORT      N_("two-sided-short-edge")
+#define CPDB_SIDES_TWO_SIDED_LONG       N_("two-sided-long-edge")
 
 #define CPDB_ORIENTATION_PORTRAIT       N_("3")
 #define CPDB_ORIENTATION_LANDSCAPE      N_("4")

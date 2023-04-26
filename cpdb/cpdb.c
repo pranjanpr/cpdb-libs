@@ -59,6 +59,11 @@ void cpdbInit()
     }
 }
 
+char **cpdbNewCStringArray(int num_elems)
+{
+    return malloc(sizeof(char *) * num_elems);
+}
+
 gboolean cpdbGetBoolean(const char *g)
 {
     if (!g)
@@ -140,14 +145,13 @@ GVariant *cpdbPackStringArray(int num_val, char **val)
     builder = g_variant_builder_new(G_VARIANT_TYPE("a(s)"));
     for (int i = 0; i < num_val; i++)
     {
-        // g_message("%s", val[i]);
         g_variant_builder_add(builder, "(s)", val[i]);
     }
 
     if (num_val == 0)
         g_variant_builder_add(builder, "(s)", "NA");
 
-    values = g_variant_new("a(s)", builder);
+    values = g_variant_builder_end(builder);
     return values;
 }
 
