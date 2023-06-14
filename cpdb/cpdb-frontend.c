@@ -391,7 +391,7 @@ PrintBackend *cpdbCreateBackendFromFile(GDBusConnection *connection,
         free(path);
         return NULL;
     }
-    if (fscanf(file, "%s", obj_path) == 0)
+    if (fscanf(file, "%1023s", obj_path) == 0)
     {
         logerror("Error creating backend %s : Couldn't parse %s\n",
                     backend_name, path);
