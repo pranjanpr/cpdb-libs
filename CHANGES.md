@@ -1,4 +1,30 @@
-# CHANGES - Common Print Dialog Backends - Libraries - v2.0b4 - 2023-03-20
+# CHANGES - Common Print Dialog Backends - Libraries - v2.0b5 - 2023-08-02
+
+## CHANGES IN V2.0b5 (2nd August 2023)
+
+ - Removed browsing for backends via file system
+   The frontend should only shout into the D-Bus to find out which
+   backends are available and to communicate with them. Depending on
+   the way (for example sandboxed packaging, like Snap) how the
+   frontend and backand are installed the frontend cannot access the
+   host's or the backend's file systems (PR #27).
+
+ - Limit scanned string length in `scanf()`/`fscanf()` functions
+   cpdb-libs uses the `fscanf()` and `scanf()` functions to parse
+   command lines and configuration files, dropping the read string
+   components into fixed-length buffers, but does not limit the length
+   of the strings to be read by `fscanf()` and `scanf()` causing
+   buffer overflows when a string is longer than 1023 characters
+   (CVE-2023-34095).
+
+ - Fixed memory bugs leading to leaks and crashes (PR #26)
+
+ - Build system: Removed unnecessary lines in `tools/Makefile.am`
+   Removed the `TESTdir` and `TEST_SCRIPTS` entries in
+   `tools/Makefile.am`.  They are not needed and let `make install`
+   try to install `run-tests.sh` in the source directory, where it
+   already is, causing an error.
+
 
 ## CHANGES IN V2.0b4 (20th March 2023)
 
