@@ -12,8 +12,10 @@
 
 void display_help();
 gpointer parse_commands(gpointer user_data);
+
 cpdb_frontend_obj_t *f;
 static const char *locale;
+GMainLoop *loop;
 
 static void printBasicOptions(const cpdb_printer_obj_t *p)
 {
@@ -121,10 +123,13 @@ static void acquire_details_callback(cpdb_printer_obj_t *p, int success, void *u
 
 static void acquire_translations_callback(cpdb_printer_obj_t *p, int success, void *user_data)
 {
-    if (!success)
+    if (success)
+    {
+        g_message("Translations acquired for %s : %s\n", p->name, p->backend_name);
+        printTranslations(p);
+    }
+    else
         g_message("Could not acquire printer translations for %s : %s\n", p->name, p->backend_name);
-    g_message("Translations acquired for %s : %s\n", p->name, p->backend_name);
-    printTranslations(p);
 }
 
 int main(int argc, char **argv)
@@ -144,10 +149,10 @@ int main(int argc, char **argv)
 
     /** Uncomment the line below if you don't want to use the previously saved settings**/
     cpdbIgnoreLastSavedSettings(f);
-    g_thread_new("parse_commands_thread", parse_commands, NULL);
     cpdbConnectToDBus(f);
     displayAllPrinters(f);
-    GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+    loop = g_main_loop_new(NULL, FALSE);
+    g_thread_new("parse_commands_thread", parse_commands, NULL);
     g_main_loop_run(loop);
 }
 
@@ -164,7 +169,8 @@ gpointer parse_commands(gpointer user_data)
         {
             cpdbDeleteFrontendObj(f);
             g_message("Stopping front end..\n");
-            exit(0);
+	    g_main_loop_quit(loop);
+	    return (NULL);
         }
         else if (strcmp(buf, "restart") == 0)
         {
@@ -496,7 +502,7 @@ gpointer parse_commands(gpointer user_data)
 
             g_message("Acquiring printer details asynchronously...\n");
             cpdbAcquireDetails(p, acquire_details_callback, NULL);
-		}
+	}
         else if (strcmp(buf, "acquire-translations") == 0)
         {
             char printer_id[BUFSIZE];
