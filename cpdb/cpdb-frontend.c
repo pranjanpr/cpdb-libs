@@ -424,7 +424,7 @@ void cpdbIgnoreLastSavedSettings(cpdb_frontend_obj_t *f)
 {
     loginfo("Ignoring previous settings\n");
     cpdbDeleteSettings(f->last_saved_settings);
-    f->last_saved_settings = NULL;
+    f->last_saved_settings = cpdbGetNewSettings();
 }
 
 gboolean cpdbAddPrinter(cpdb_frontend_obj_t *f, 
@@ -1857,10 +1857,12 @@ cpdb_settings_t *cpdbReadSettingsFromDisk()
     char buf[CPDB_BSIZE];
     cpdb_settings_t *s;
 
+    s = cpdbGetNewSettings();
+
     if ((conf_dir = cpdbGetUserConfDir()) == NULL)
     {
         logerror("No previous settings found : Couldn't obtain user config dir\n");
-        return NULL;
+        return s;
     }
     path = cpdbConcatPath(conf_dir, CPDB_PRINT_SETTINGS_FILE);
 
@@ -1871,10 +1873,9 @@ cpdb_settings_t *cpdbReadSettingsFromDisk()
         free(path);
         free(conf_dir);
         
-        return NULL;
+        return s;
     }
 
-    s = cpdbGetNewSettings();
     if (fscanf(fp, "%d\n", &count) == 0)
     {
         logerror("Error getting settings from disk : Couldn't parse %s\n",
@@ -1882,8 +1883,7 @@ cpdb_settings_t *cpdbReadSettingsFromDisk()
         fclose(fp);
         free(path);
         free(conf_dir);
-        cpdbDeleteSettings(s);
-        return NULL;
+        return s;
     }
     while (count--)
     {
