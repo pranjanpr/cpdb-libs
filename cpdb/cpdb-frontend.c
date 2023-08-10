@@ -279,11 +279,12 @@ void cpdbConnectToDBus(cpdb_frontend_obj_t *f)
                                              NULL);
 
     // Wait till either of name acquired/lost callbacks finish
-    context = g_main_context_get_thread_default();
+    context = g_main_context_ref_thread_default();
     while (!f->name_done)
     {
         g_main_context_iteration(context, TRUE);
     }
+    g_main_context_unref(context);
 }
 
 void cpdbDisconnectFromDBus(cpdb_frontend_obj_t *f)
