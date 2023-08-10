@@ -11,11 +11,10 @@
 #define BUFSIZE 1024
 
 void display_help();
-gpointer parse_commands(gpointer user_data);
+gpointer control_thread(gpointer user_data);
 
 cpdb_frontend_obj_t *f;
 static const char *locale;
-GMainLoop *loop;
 
 static void printBasicOptions(const cpdb_printer_obj_t *p)
 {
@@ -149,17 +148,18 @@ int main(int argc, char **argv)
 
     /** Uncomment the line below if you don't want to use the previously saved settings**/
     cpdbIgnoreLastSavedSettings(f);
-    cpdbConnectToDBus(f);
-    displayAllPrinters(f);
-    loop = g_main_loop_new(NULL, FALSE);
-    g_thread_new("parse_commands_thread", parse_commands, NULL);
-    g_main_loop_run(loop);
+    GThread *thread = g_thread_new("control_thread", control_thread, NULL);
+    g_thread_join(thread);
 }
 
-gpointer parse_commands(gpointer user_data)
+gpointer control_thread(gpointer user_data)
 {
     fflush(stdout);
     char buf[BUFSIZE];
+
+    cpdbConnectToDBus(f);
+    displayAllPrinters(f);
+
     while (1)
     {
         printf("> ");
@@ -169,7 +169,6 @@ gpointer parse_commands(gpointer user_data)
         {
             cpdbDeleteFrontendObj(f);
             g_message("Stopping front end..\n");
-	    g_main_loop_quit(loop);
 	    return (NULL);
         }
         else if (strcmp(buf, "restart") == 0)
