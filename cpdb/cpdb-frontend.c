@@ -337,13 +337,19 @@ static void fetchPrinterListFromBackend(cpdb_frontend_obj_t *f, const char *back
 
 static void cpdbActivateBackends(cpdb_frontend_obj_t *f)
 {
-    int len;
+    int len, i;
     char *service_name, *backend_suffix;
     GDBusProxy *dbus_proxy;
     PrintBackend *backend_proxy;
     GVariantIter iter;
     GError *error = NULL;
     GVariant *service_names, *service_names_tuple;
+    const char * const name_lists[] =
+    {
+      "ListNames",
+      "ListActivatableNames",
+      NULL
+    };
 
     logdebug("Activating backends\n");
     dbus_proxy = g_dbus_proxy_new_sync(f->connection,
@@ -360,39 +366,50 @@ static void cpdbActivateBackends(cpdb_frontend_obj_t *f)
         g_error_free(error);
         return;
     }
-    service_names_tuple = g_dbus_proxy_call_sync(dbus_proxy,
-                                                 "ListActivatableNames",
-                                                 NULL,
-                                                 G_DBUS_CALL_FLAGS_NONE,
-                                                 -1,
-                                                 NULL,
-                                                 &error);
-    if (error)
-    {
-        logerror("Couldn't get activatable service names %s", error->message);
-        g_error_free(error);
-        return;
-    }
-    service_names = g_variant_get_child_value(service_names_tuple, 0);
 
-    len = strlen(CPDB_BACKEND_PREFIX);
-    g_variant_iter_init(&iter, service_names);
-    while (g_variant_iter_next(&iter, "s", &service_name))
+    for (i = 0; name_lists[i]; i ++)
     {
+      service_names_tuple = g_dbus_proxy_call_sync(dbus_proxy,
+						   name_lists[i],
+						   NULL,
+						   G_DBUS_CALL_FLAGS_NONE,
+						   -1,
+						   NULL,
+						   &error);
+      if (error)
+      {
+	logerror("Couldn't get service names (%s): %s",
+		 name_lists[i], error->message);
+	g_error_free(error);
+	continue;
+      }
+
+      service_names = g_variant_get_child_value(service_names_tuple, 0);
+
+      len = strlen(CPDB_BACKEND_PREFIX);
+      g_variant_iter_init(&iter, service_names);
+      while (g_variant_iter_next(&iter, "s", &service_name))
+      {
         if (g_str_has_prefix(service_name, CPDB_BACKEND_PREFIX))
-        {
-            backend_suffix = cpdbGetStringCopy(service_name + len);
-            loginfo("Found backend %s\n", backend_suffix);
-            backend_proxy = cpdbCreateBackend(f->connection, service_name);
-            g_hash_table_insert(f->backend, backend_suffix, backend_proxy);
-            f->num_backends++;
-            fetchPrinterListFromBackend(f, backend_suffix);
-	    g_object_unref(backend_proxy);
+	{
+	  backend_suffix = cpdbGetStringCopy(service_name + len);
+	  if (g_hash_table_lookup(f->backend, backend_suffix))
+	    continue;
+	  loginfo("Found backend %s (%s)\n", backend_suffix,
+		  i ? "Starting now" : "Already running");
+	  backend_proxy = cpdbCreateBackend(f->connection, service_name);
+	  if (backend_proxy == NULL)
+	    continue;
+	  g_hash_table_insert(f->backend, backend_suffix, backend_proxy);
+	  f->num_backends++;
+	  fetchPrinterListFromBackend(f, backend_suffix);
+	  g_object_unref(backend_proxy);
         }
-    }
+      }
 
-    g_variant_unref(service_names);
-    g_variant_unref(service_names_tuple);
+      g_variant_unref(service_names);
+      g_variant_unref(service_names_tuple);
+    }
 }
 
 PrintBackend *cpdbCreateBackend(GDBusConnection *connection,
