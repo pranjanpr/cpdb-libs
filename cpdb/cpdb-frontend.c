@@ -387,12 +387,12 @@ static void cpdbActivateBackends(cpdb_frontend_obj_t *f)
             g_hash_table_insert(f->backend, backend_suffix, backend_proxy);
             f->num_backends++;
             fetchPrinterListFromBackend(f, backend_suffix);
+	    g_object_unref(backend_proxy);
         }
     }
 
     g_variant_unref(service_names);
     g_variant_unref(service_names_tuple);
-    g_object_unref(backend_proxy);
 }
 
 PrintBackend *cpdbCreateBackend(GDBusConnection *connection,
